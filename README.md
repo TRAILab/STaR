@@ -8,7 +8,7 @@
   <img src="assets/STaR_System_Overview.jpg" alt="STaR System Overview" width="90%"/>
 </p>
 <p align="center">
-  <em>Task-Conditioned Retrieval via Information Bottleneck and Contextual Reasoning.</em>
+  <em>Task-Conditioned Retrieval via Information Bottleneck and Context-Aware Cross-Modal Reasoning.</em>
 </p>
 <p align="center">
   <img src="assets/Task_Conditioned_Retrieval.jpg" 
