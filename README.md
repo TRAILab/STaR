@@ -3,7 +3,7 @@
 [[Project Page](https://trailab.github.io/STaR-website/)]
 
 <p align="center">
-  <img src="assets/STaR_System_Overview.png" alt="STaR System Overview"/>
+  <img src="assets/STaR_System_Overview.jpg" alt="STaR System Overview"/>
 </p>
 
 
