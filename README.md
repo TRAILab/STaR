@@ -4,8 +4,6 @@
 
 <p align="center">
   <img src="assets/STaR_System_Overview.jpg" alt="STaR System Overview" width="90%"/>
-</p>
-<p align="center">
   <em>STaR System Overview.</em>
 </p>
 
