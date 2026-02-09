@@ -1,20 +1,19 @@
 # STaR: Scalable Task-Conditioned Retrieval for Long-Horizon Multimodal Robot Memory
 
 [[Project Page](https://trailab.github.io/STaR-website/)]
-
 <p align="center">
-  <img src="assets/STaR_System_Overview.jpg" alt="STaR System Overview" width="90%"/>
   <em>STaR System Overview.</em>
 </p>
-
 <p align="center">
-  <img src="assets/Task_Conditioned_Retrieval.jpg" 
-       alt="Task-conditioned retrieval and contextual reasoning" width="90%"/>
+  <img src="assets/STaR_System_Overview.jpg" alt="STaR System Overview" width="90%"/>
 </p>
 <p align="center">
   <em>Task-Conditioned Retrieval via Information Bottleneck and contextual reasoning.</em>
 </p>
-
+<p align="center">
+  <img src="assets/Task_Conditioned_Retrieval.jpg" 
+       alt="Task-conditioned retrieval and contextual reasoning" width="90%"/>
+</p>
 
 ## Overview
 STaR is an agentic framework for scalable task-conditioned retrieval and contextual reasoning over long-horizon multimodal robot memory, enabling robots to answer open-ended spatial, temporal, and descriptive queries and to produce precise, actionable outputs for navigation.
