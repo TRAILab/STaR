@@ -3,7 +3,18 @@
 [[Project Page](https://trailab.github.io/STaR-website/)]
 
 <p align="center">
-  <img src="assets/STaR_System_Overview.jpg" alt="STaR System Overview"/>
+  <img src="assets/STaR_System_Overview.jpg" alt="STaR System Overview" width="90%"/>
+</p>
+<p align="center">
+  <em>STaR System Overview.</em>
+</p>
+
+<p align="center">
+  <img src="assets/Task_Conditioned_Retrieval.jpg" 
+       alt="Task-conditioned retrieval and contextual reasoning" width="90%"/>
+</p>
+<p align="center">
+  <em>Task-Conditioned Retrieval via Information Bottleneck and contextual reasoning.</em>
 </p>
 
 
