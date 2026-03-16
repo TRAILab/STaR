@@ -1,4 +1,4 @@
-# STaR: Scalable Task-Conditioned Retrieval for Long-Horizon Multimodal Robot Memory
+# [RA-L 2026] STaR: Scalable Task-Conditioned Retrieval for Long-Horizon Multimodal Robot Memory
 
 [[arXiv](https://arxiv.org/abs/2602.09255)] [[Project Page](https://trailab.github.io/STaR-website/)]
 <p align="center">
