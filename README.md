@@ -26,4 +26,4 @@ Key contributions:
 
 ## Code
 
-Code coming soon.
+Code coming soon (expected May 15).
