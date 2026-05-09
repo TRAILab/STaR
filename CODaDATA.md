@@ -37,9 +37,6 @@ CODa/
 ├── 3d_comp/          
 │   ├── os1/
 │   │   └── <seq>/    # Numbered pcds: 3d_comp_os1_0_0.bin, 3d_comp_os1_0_1.bin
-├── 3d_raw/          
-│   ├── cam0/
-│   └── cam0_undist/
 ├── calibrations/     # Per-sequence camera intrinsics & extrinsics
 │   └── <seq>/
 ├── poses/
