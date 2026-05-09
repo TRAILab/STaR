@@ -34,6 +34,9 @@ CODa/
 │   ├── cam0/
 │   │   └── <seq>/    # Numbered frames: 000000.png, 000001.png, ...
 │   └── cam1/
+├── 3d_comp/          
+│   ├── os1/
+│   │   └── <seq>/    # Numbered pcds: 3d_comp_os1_0_0.bin, 3d_comp_os1_0_1.bin
 ├── 3d_raw/          
 │   ├── cam0/
 │   └── cam0_undist/
