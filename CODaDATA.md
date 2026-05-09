@@ -37,8 +37,8 @@ CODa/
 ├── 3d_comp/          
 │   ├── os1/
 │   │   └── <seq>/    # Numbered pcds: 3d_comp_os1_0_0.bin, 3d_comp_os1_0_1.bin
-├── calibrations/     # Per-sequence camera intrinsics & extrinsics
-│   └── <seq>/
+├── calibrations/     
+│   └── <seq>/        # Per-sequence camera intrinsics & extrinsics
 ├── poses/
 │   └── dense_global/ # Global pose estimates (used for TF)
 └── timestamps/       # Per-sequence timestamp files
