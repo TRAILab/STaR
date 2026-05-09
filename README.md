@@ -25,5 +25,5 @@ Key contributions:
 - Extensive evaluation and real-robot deployment, demonstrating state-of-the-art performance on NaVQA and a challenging warehouse benchmark (WH-VQA in Isaac Sim), as well as robust long-horizon reasoning on a real Husky mobile robot.
 
 ## Code
-
+**[Installation](INSTALL.md) | [Running](RUNNING.md) | [Codebase](CODEBASE.md) | [STaR-Online]([https://github.com/MIT-SPARK/DAAAM-ROS](https://github.com/TRAILab/STaR/edit/main/README.md))**
 Code coming soon (expected May 15).
