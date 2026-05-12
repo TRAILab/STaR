@@ -43,3 +43,23 @@ CODa/
 │   └── dense_global/ # Global pose estimates (used for TF)
 └── timestamps/       # Per-sequence timestamp files
 ```
+
+## Check the dataset and preprocess it
+
+### 1. Ensure `data/navqa/data.csv` exists
+This folder contains the questions and answers that must be converted into the proper format.
+
+### 2. Form the questions in the proper format
+Run the following script, providing it a base captioner file that you ran previously. 
+
+```
+python scripts/question_scripts/form_question_jsons.py --caption_file captions_{{captioner_name}}_{{seconds_per_caption}}_secs
+```
+
+This is meant to also aggregate the "optimal" context required to answer the question based on the captioner and seconds per caption, so you must set `captioner_name` and `seconds_per_caption`. We recommend using a 3 seconds per caption value. Here is an example coninuing from above:
+
+```
+python scripts/question_scripts/form_question_jsons.py --caption_file captions_VILA1.5-13b_3_secs
+```
+
+After this step, a folder called `data/questions` should exist.
