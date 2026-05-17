@@ -29,7 +29,7 @@ export CODA_ROOT_DIR=/path/to/CODa
 Expected directory structure after download:
 
 ```
-CODa/
+CODa_dataset/
 ├── 2d_rect/          # Rectified camera images
 │   ├── cam0/
 │   │   └── <seq>/    # Numbered frames: 000000.png, 000001.png, ...
