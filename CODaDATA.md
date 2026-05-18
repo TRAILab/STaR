@@ -23,13 +23,13 @@ Pre-defined splits (`tiny`, `small`, `medium`, `full`) are also available — se
 Set the dataset root for convenience:
 
 ```bash
-export CODA_ROOT_DIR=/path/to/CODa_dataset
+export CODA_ROOT_DIR=/path/to/CODa
 ```
 
 Expected directory structure after download:
 
 ```
-CODa_dataset/
+CODa/
 ├── 2d_rect/          # Rectified camera images
 │   ├── cam0/
 │   │   └── <seq>/    # Numbered frames: 000000.png, 000001.png, ...
