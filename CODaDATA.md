@@ -23,7 +23,7 @@ Pre-defined splits (`tiny`, `small`, `medium`, `full`) are also available — se
 Set the dataset root for convenience:
 
 ```bash
-export CODA_ROOT_DIR=/path/to/CODa_dataset/data
+export CODA_ROOT_DIR=/path/to/CODa_dataset
 ```
 
 Expected directory structure after download:
