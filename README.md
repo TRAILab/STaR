@@ -26,4 +26,4 @@ Key contributions:
 
 ## Code
 **[CODa Dataset](CODaDATA.md) | [Installation](INSTALL.md) | [Running](RUNNING.md) | [Codebase](CODEBASE.md) | [STaR-Online]([https://github.com/MIT-SPARK/DAAAM-ROS](https://github.com/TRAILab/STaR/edit/main/README.md))**
-Code coming soon (expected May 15).
+Code coming soon (expected May).
