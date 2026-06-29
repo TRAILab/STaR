@@ -21,7 +21,7 @@ STaR is a project that utilize LLM, VLM, and scene graph to build and reason ove
 ## Usage
 ### Step 1- Create a Memory database and the Scene Graph
 - Before you can use the STaR agent, you need to build robot memory.
-- Read [here](BuildMemory.md) for more details about how to collect memory data for the agent.
+- Read [here](BuildMemory.md) for more details about how to multimodal robot memory.
 - Read [here](INSTALL.md) to learn more about how to configure the system.
 
 ### Step 2 - Open the User Interface
