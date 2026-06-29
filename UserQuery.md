@@ -2,7 +2,7 @@
 STaR is a project that utilize LLM, VLM, and scene graph to build and reason over long term spatio-temporal memories.
 
 ## Setup
-1. It is recommended to use docker to run the project as we use the config files for docker by default, check [here](INSTALL.md) to learn how to run on docker container. Alternatively, you can run without docker container, check [here](./INSTALL.md) for more details about dependency installation.
+1. It is recommended to use docker to run the project as we use the config files for docker by default, check [here](INSTALL.md) to learn how to run on docker container.
 2. Install MilvusDB
     ```
     curl -sfL https://raw.githubusercontent.com/milvus-io/milvus/master/scripts/standalone_embed.sh -o launch_milvus_container.sh
