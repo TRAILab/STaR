@@ -46,7 +46,7 @@ CODa/
 
 ## Check the dataset and preprocess it
 
-### 1. Ensure `data/navqa/data.csv` exists
+### 1. Ensure `star_uv/data/coda/navqa/data.csv` exists
 This folder contains the questions and answers that must be converted into the proper format.
 
 ### 2. Form the questions in the proper format
