@@ -216,13 +216,11 @@ Common outputs are:
 /workspace/results/<sequence>/annotated_rgb/
 /workspace/results/<sequence>/caption/
 ```
+After this step, you will have the three main components of the memory:
 
-The main memory file is:
-
-```bash
-/workspace/results/<sequence>/pcd/full_pcd.pkl.gz
-```
-
+- `full_pcd.pkl.gz`: 3D primitives and their geometry/captions.
+- `annotated_rgb/`: key frames with object indices overlaid.
+- `caption/`: video captions for observation windows.
 The annotated RGB images show object indices. These indices can be used later in the 3D visualization tool.
 
 ## 10. Visualize The Memory
@@ -254,5 +252,3 @@ search building
 ```
 
 Press `q` to quit.
-
-If your output sequence name is a timestamp instead of `0`, use the actual folder name shown in `/workspace/results/` for `--sequence_id`.
