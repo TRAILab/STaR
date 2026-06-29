@@ -60,10 +60,13 @@ camera_projection_matrix: ...
 lidar_to_camera_matrix: ...
 base_link_to_lidar_matrix: ...
 
+front_axis: "x"
 bbox_mode: obb
 ```
 
 Use `bbox_mode: obb` for tighter rotated boxes, or `bbox_mode: aabb` for axis-aligned boxes. This setting affects object merging and 3D visualization.
+
+Also check `front_axis`. The pipeline filters out point cloud points on the backside before projection and memory construction, so this value must match your LiDAR coordinate convention. For CODa/KITTI-style data, the forward axis is usually `x`. For Isaac/TrailBot-style data, the forward axis may be `y`. If this value is wrong, useful front-facing points may be removed, or backside points may be kept.
 
 ## 3. Disable Blocking Visualization During Memory Construction
 
