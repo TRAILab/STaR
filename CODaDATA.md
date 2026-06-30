@@ -53,13 +53,13 @@ This folder contains the questions and answers that must be converted into the p
 Run the following script, providing it a base captioner file that you ran previously. 
 
 ```
-python scripts/question_scripts/form_question_jsons_bbox.py --caption_file captions_{{captioner_name}}-{{seconds_per_caption}}-{{#B}}
+python scripts/question_scripts/form_question_jsons_bbox.py --caption_file captions_{{captioner_name}}-{{#B}}
 ```
 
 This is meant to also aggregate the "optimal" context required to answer the question based on the captioner and seconds per caption, so you must set `captioner_name` and `seconds_per_caption`. We recommend using a 3 seconds per caption value. Here is an example coninuing from above:
 
 ```
-python scripts/question_scripts/form_question_jsons.py --caption_file captions_VILA1.5-13b_3_secs
+python scripts/question_scripts/form_question_jsons.py --caption_file caption_NVILA-Lite-2B
 ```
 
 After this step, a folder called `data/questions` should exist.
