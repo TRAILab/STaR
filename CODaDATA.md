@@ -43,3 +43,49 @@ CODa/
 │   └── dense_global/ # Global pose estimates (used for TF)
 └── timestamps/       # Per-sequence timestamp files
 ```
+
+## Prepare the NaVQA Evaluation Dataset
+
+> **Note**
+>
+> This step is only required if you plan to evaluate on **NaVQA**.
+>
+> Complete the **memory construction** pipeline first, then return to this section. The preprocessing script requires the generated **video captions**.
+
+### 1. Verify the QA annotation file
+
+Ensure the following file exists:
+
+```text
+star_uv/data/coda/navqa/data.csv
+```
+
+This file contains the original NaVQA questions and answers that will be converted into the format required by STaR.
+
+### 2. Convert the questions to the STaR format
+
+Run the preprocessing script using the video caption file generated during memory construction:
+
+```bash
+python scripts/question_scripts/form_question_jsons.py \
+    --caption_file caption_<captioner_name>
+```
+
+For example:
+
+```bash
+python scripts/question_scripts/form_question_jsons.py \
+    --caption_file caption_NVILA-Lite-2B
+```
+
+This script also computes the **optimal context** for each question based on the selected captioner and caption interval. We recommend generating video captions every **3 seconds**.
+
+### 3. Verify the output
+
+After preprocessing completes, the following directory should be created:
+
+```text
+data/questions/
+```
+
+This directory contains the processed NaVQA questions used for evaluation.
