@@ -94,12 +94,6 @@ Open a terminal inside the container or workspace and source ROS:
 source /opt/ros/humble/setup.bash
 ```
 
-If your workspace has a ROS setup file, source that too:
-
-```bash
-source install/setup.bash
-```
-
 ## 5. Run Memory Construction
 
 From the repository root, run:
@@ -158,12 +152,6 @@ For example:
 playback_rate: 0.5
 ```
 
-For slower machines, use an even lower rate:
-
-```yaml
-playback_rate: 0.2
-```
-
 A lower playback rate helps keep data publishing and memory construction balanced, so the observation buffer does not grow too fast and RAM usage stays under control.
 
 If you are using your own rosbag or live robot sensors instead of CODa, start them in the second terminal and make sure they publish the configured RGB, LiDAR, and TF topics.
@@ -185,7 +173,7 @@ video_caption_buffer
 
 When both buffers are `0`, all queued observations have been processed.
 
-If `enable_online_captioning: true`, the script builds video captions while the scene graph is being constructed.
+If enable_online_captioning: true, the script generates video captions online while constructing the 3D primitives.
 
 ## 8. Finish Safely
 
