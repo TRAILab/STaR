@@ -39,11 +39,45 @@ If you want to rebuild the image, you can run
 ./run_star.sh --rebuild
 ```
 ## Usage
-Check [here](DATA_COLLECTION.md) for more details about the data collection pipeline. 
+Check [here](BuildMemory.md) for more details about the data collection pipeline. 
 
 After you collect the data with the code run in container, you should be about to see a folder called `result`.
-## Note
-1. If you cannot see the ros2 topic in the container, check ROS_DOMIAN_ID on both host and the container, the host and the container should have the same domain id
-2. If you can see the topic but cannot get the actually data from the topic, you can try `export FASTDDS_BUILTIN_TRANSPORTS=UDPv4`
-3. If you want to visualize the scenegraph when using the container, got to the host machine and then run `xhost +local:`
-4. This docker image is designed for CUDA12.8 and docker-compose 2
+## Notes
+
+1. **ROS 2 topics are not visible inside the container**
+
+   Make sure the host and the container are using the same `ROS_DOMAIN_ID`.
+
+   Check the domain ID:
+   ```bash
+   # On the host
+   echo $ROS_DOMAIN_ID
+
+   # Inside the container
+   echo $ROS_DOMAIN_ID
+   ```
+
+   If necessary, set the same value in both environments (replace `90` with your desired domain ID):
+   ```bash
+   export ROS_DOMAIN_ID=90
+   ```
+
+2. **ROS 2 topics are visible, but no data is received**
+
+   Try forcing Fast DDS to use UDP transport:
+   ```bash
+   export FASTDDS_BUILTIN_TRANSPORTS=UDPv4
+   ```
+
+3. **Unable to visualize the scene graph from the Docker container**
+
+   On the **host machine**, allow local Docker containers to access the X server:
+   ```bash
+   xhost +local:
+   ```
+
+4. **Compatibility**
+
+   This Docker image has been tested with:
+   - CUDA 12.8
+   - Docker Compose v2
