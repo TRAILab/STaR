@@ -39,7 +39,7 @@ If you want to rebuild the image, you can run
 ./run_star.sh --rebuild
 ```
 ## Usage
-Check [here](BuildMemory.md) for more details about the data collection pipeline. 
+Check [Memory Construction](BuildMemory.md) for more details about the data collection pipeline. 
 
 After you collect the data with the code run in container, you should be about to see a folder called `result`.
 ## Notes
