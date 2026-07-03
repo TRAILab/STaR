@@ -50,7 +50,7 @@ CODa/
 >
 > This step is only required if you plan to evaluate on **NaVQA**.
 >
-> Complete the **memory construction** pipeline first, then return to this section. The preprocessing script requires the generated **video captions**.
+> Complete the [**memory construction**](BuildMemory.md) pipeline first, then return to this section. The preprocessing script requires the generated **video captions**.
 
 ### 1. Verify the QA annotation file
 
