@@ -18,8 +18,6 @@ cd coda-devkit
 python scripts/download_split.py -d /path/to/CODa -t sequence -se 0
 ```
 
-Pre-defined splits (`tiny`, `small`, `medium`, `full`) are also available — see the devkit README.
-
 Set the dataset root for convenience:
 
 ```bash
