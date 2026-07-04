@@ -1,198 +1,310 @@
 # STaR Agentic RAG
 
-STaR supports an **Agentic RAG** workflow built on the robot's multimodal memory. Given an open-ended user query, the STaR agent:
-- Plans an effective memory retrieval strategy.
-- Autonomously invokes the appropriate retrieval tools.
-- Retrieves the most relevant multimodal memories from the robot's long-term memory.
-- Performs cross-modal contextual reasoning over the retrieved memories.
-- Generates an accurate and context-aware response.
+STaR supports an **Agentic Retrieval-Augmented Generation (Agentic RAG)** workflow built upon the robot's multimodal long-term memory.
 
-## Setup
-1. It is recommended to use docker to run the project as we use the config files for docker by default, check [here](INSTALL.md) to learn how to run on docker container.
-2. Install MilvusDB
-    ```
-    curl -sfL https://raw.githubusercontent.com/milvus-io/milvus/master/scripts/standalone_embed.sh -o launch_milvus_container.sh
-    ```
+Given an open-ended user query, the STaR agent will:
 
-    docker must be installed on the system to easily use Milvus by simply running the command below. This script will automatically launch MilvusDB on a docker container. Otherwise, the user must install MilvusDB from scratch themselves
+- 🧠Plan an effective memory retrieval strategy.
+- 🔧 Autonomously invoke the required retrieval tools.
+- 📚 Retrieve the most relevant multimodal memories.
+- 🔍 Perform cross-modal contextual reasoning.
+- 💬 Generate an accurate and context-aware response.
 
-    ```
-    bash launch_milvus_container.sh start
-    ```
-3. Install OLLama (Optional)
-    ```
-    curl -fsSL https://ollama.com/install.sh | sh
-    ```
+---
 
-# STaR QA Quick Start
+# Prerequisites
 
-This guide covers two common ways to run STaR question answering:
+## 1. Run STaR in Docker (Recommended)
 
-1. Run evaluation on an existing NaVQA file.
-2. Ask live questions from the Gradio web interface.
+STaR is configured to use Docker by default.
 
+Please follow the installation guide:
 
-**0. Start Milvus**
+> **[INSTALL.md](INSTALL.md)**
 
-From the STaR repository root, start Milvus before running the agent:
+---
 
-    bash scripts/bash/launch_milvus_container.sh start
+## 2. Launch Milvus
 
+Milvus is required for multimodal memory retrieval.
 
-**1. Check The Config**
+Download the launch script:
 
-Main config:
+```bash
+curl -sfL https://raw.githubusercontent.com/milvus-io/milvus/master/scripts/standalone_embed.sh \
+-o launch_milvus_container.sh
+```
 
-    configs/config.yaml
+Start Milvus:
+
+```bash
+bash launch_milvus_container.sh start
+```
+
+> **Note**
+>
+> Docker must be installed. The script automatically launches Milvus inside a Docker container.
+
+---
+
+## 3. Install Ollama (Optional)
+
+Only required when using local LLMs.
+
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+---
+
+# Quick Start
+
+STaR supports two common QA modes:
+
+| Mode | Description |
+|-------|-------------|
+| **Dataset Evaluation** | Evaluate an existing NaVQA question file. |
+| **Interactive Gradio** | Ask live questions through the web interface. |
+
+---
+
+# Step 1. Start Milvus
+
+From the project root:
+
+```bash
+bash scripts/bash/launch_milvus_container.sh start
+```
+
+---
+
+# Step 2. Check Configuration
+
+Main configuration:
+
+```
+configs/config.yaml
+```
 
 Important fields:
 
-    sequence: "0"
-    postfix: "CoDa"
+```yaml
+sequence: "0"
+postfix: "CoDa"
+```
 
-Meaning:
+### sequence
 
-    sequence
-        Dataset / run ID.
+Dataset / experiment ID.
 
-    postfix
-        Gradio output channel. This must match the `--postfix` argument used by
-        eval_AIB.py.
+### postfix
 
-Gradio path config:
+Used as the Gradio output channel.
 
-    configs/inference/docker.yaml
+> **Important**
+>
+> This value **must match** the `--postfix` argument passed to `eval_AIB.py`.
 
+Docker path configuration:
 
-**2. Prepare The Expected Files**
+```
+configs/inference/docker.yaml
+```
 
-The default Docker paths are:
+---
 
-    Video captions
-        /workspace/results/<sequence>/caption/<caption_file>.json
+# Step 3. Prepare Required Files
 
-    Scene graph / point-cloud memory
-        /workspace/results/<sequence>/pcd/<scenegraph_file>.pkl.gz
+By default, STaR expects the following files:
 
-    Annotated RGB keyframes
-        /workspace/results/<sequence>/annotated_rgb/annotated_rgb_<idx>.png
+| Data | Default Path |
+|------|--------------|
+| Video captions | `/workspace/results/<sequence>/caption/<caption_file>.json` |
+| Scene graph memory | `/workspace/results/<sequence>/pcd/<scenegraph_file>.pkl.gz` |
+| Annotated RGB keyframes | `/workspace/results/<sequence>/annotated_rgb/annotated_rgb_<idx>.png` |
+| Frame timestamps | `/workspace/Local_data/CODa/timestamps/<sequence>.txt` |
+| QA file | `/workspace/data/coda/questions/<sequence>/<qa_file>.json` |
 
-    Raw frame timestamps
-        /workspace/Local_data/CODa/timestamps/<sequence>.txt
+---
 
-    QA questions
-        /workspace/data/coda/questions/<sequence>/<qa_file>.json
+# Option 1 — Run Dataset Evaluation
 
+Simply run:
 
-**3. Run eval_AIB.py On Existing Questions**
+```bash
+python scripts/eval_AIB.py
+```
 
-Base command:
+Default configuration:
 
-    python scripts/eval_AIB.py
+```text
+--question_source dataset
+--manual_evaluation True
+--method star
+--llm gpt-4.1
+--sequence_id 0
+--postfix CoDa
+```
 
-By default, this runs dataset evaluation with:
+---
 
-    --question_source dataset
-    --manual_evaluation True
-    --method star
-    --llm gpt-4.1
-    --sequence_id 0
-    --postfix CoDa
+## Manual vs Automatic Evaluation
 
-Override only the options you need. For example:
+### Manual
 
-    --manual_evaluation False
-        Run all selected questions automatically.
+```bash
+--manual_evaluation True
+```
 
-    --manual_evaluation True
-        Step through questions manually. The script asks before each question,
-        and you can run, skip, jump to an index, or quit.
+The script pauses before each question and lets you:
 
-Available methods:
+- Run
+- Skip
+- Jump to another index
+- Quit
 
-    star
-        STaR / AIB retrieval agent.
+### Automatic
 
-    remembr
-        Vanilla ReMEmbR-style baseline.
+```bash
+--manual_evaluation False
+```
 
-    scene_graph
-        Scene-graph baseline.
+Runs every selected question automatically.
 
-Common options:
+---
 
-    --sequence_id
-        Dataset / run ID. Default: 0.
+## Retrieval Methods
 
-    --postfix
-        Gradio output channel. Default: CoDa.
+| Method | Description |
+|---------|-------------|
+| `star` | STaR Agentic RAG (recommended) |
+| `remembr` | Vanilla ReMEmbR baseline |
+| `scene_graph` | Scene graph retrieval baseline |
 
-    --qa_file
-        QA file name without .json. Default: human_qa.
+---
 
-    --caption_file
-        Caption file name without .json. Default: captions_NVILA-Lite-2B.
+## Common Arguments
 
-    --scenegraph_file
-        Scene graph file name without .pkl.gz. Default: full_pcd.
+| Argument | Description | Default |
+|----------|-------------|---------|
+| `--sequence_id` | Dataset / experiment ID | `0` |
+| `--postfix` | Gradio output channel | `CoDa` |
+| `--qa_file` | QA filename (without `.json`) | `human_qa` |
+| `--caption_file` | Caption filename | `captions_NVILA-Lite-2B` |
+| `--scenegraph_file` | Scene graph filename | `full_pcd` |
+| `--results` | Results directory | `/workspace/results` |
+| `--data_dir` | Dataset directory | `/workspace/data/coda` |
+| `--coda_dir` | CODa timestamps | `/workspace/Local_data/CODa` |
 
-    --results
-        Result folder containing captions, scene graph, and annotated images.
-        Default: /workspace/results.
+---
 
-    --data_dir
-        Dataset folder containing QA files. Default: /workspace/data/coda.
+# Option 2 — Ask Live Questions (Gradio)
 
-    --coda_dir
-        CODa folder containing timestamp files. Default: /workspace/Local_data/CODa.
+## Terminal 1
 
+Launch the web interface:
 
-**4. Ask Live Questions From Gradio With eval_AIB.py**
+```bash
+python scripts/run_gradio_interface.py
+```
 
-Terminal 1: start the web UI.
+---
 
-    python scripts/run_gradio_interface.py
+## Terminal 2
 
-Terminal 2: start the QA agent.
+Launch the QA agent:
 
-    python scripts/eval_AIB.py \
-      --question_source gradio
+```bash
+python scripts/eval_AIB.py \
+    --question_source gradio
+```
 
-Then open the Gradio URL, type a question, and press Submit.
+Then open the Gradio URL in your browser and start asking questions.
 
-If your config uses a different sequence or postfix, pass only those overrides:
+If using a different dataset:
 
-    python scripts/eval_AIB.py \
-      --question_source gradio \
-      --sequence_id <sequence> \
-      --postfix <postfix>
+```bash
+python scripts/eval_AIB.py \
+    --question_source gradio \
+    --sequence_id <sequence> \
+    --postfix <postfix>
+```
 
+---
 
-**5. What Gradio Displays**
+# Gradio Visualization
 
-Retrieval score plot
+After each query, STaR generates several visualizations.
 
-    Path:
-        /workspace/results/<sequence>/search_DB/<postfix>/retrieval_DB_<idx>_<postfix>.png
+## Retrieval Score Timeline
 
-    Meaning:
-        Shows which video-caption memories were retrieved from the vector
-        database and how relevant they were over time.
+**Purpose**
 
-Retrieved keyframes
+Shows which video-caption memories were retrieved and how relevant they are over time.
 
-    Path:
-        /workspace/results/<sequence>/images/<postfix>/<idx>/
+**Output**
 
-    Meaning:
-        Visual evidence images selected from the timestamps suggested by the
-        agent.
+```
+/workspace/results/<sequence>/search_DB/<postfix>/
+    retrieval_DB_<idx>_<postfix>.png
+```
 
-Agent log
+---
 
-    Path:
-        /workspace/results/<sequence>/cot_log/<postfix>/cot_log_<idx>.txt
+## Retrieved Keyframes
 
-    Meaning:
-        Records the user question, retrieval steps, selected timestamps/images,
-        and final reasoning output shown in the Gradio chat.
+**Purpose**
+
+Displays the visual evidence selected by the agent.
+
+**Output**
+
+```
+/workspace/results/<sequence>/images/<postfix>/<idx>/
+```
+
+---
+
+## Agent Reasoning Log
+
+**Purpose**
+
+Records the complete reasoning process, including:
+
+- User question
+- Retrieval actions
+- Selected timestamps
+- Retrieved images
+- Final reasoning
+- Generated answer
+
+**Output**
+
+```
+/workspace/results/<sequence>/cot_log/<postfix>/
+    cot_log_<idx>.txt
+```
+
+---
+
+# Workflow Overview
+
+```text
+User Question
+      │
+      ▼
+ Agent Planning
+      │
+      ▼
+Memory Retrieval
+(Video + Scene Graph + Images)
+      │
+      ▼
+Cross-modal Reasoning
+      │
+      ▼
+Answer Generation
+      │
+      ▼
+ Gradio Visualization
+```
