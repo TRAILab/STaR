@@ -1,4 +1,4 @@
-# Running-STaR Agentic RAG
+# STaR Agentic RAG
 
 STaR supports an **Agentic RAG** workflow built on the robot's multimodal memory. Given an open-ended user query, the STaR agent:
 - Plans an effective memory retrieval strategy.
@@ -24,24 +24,6 @@ STaR supports an **Agentic RAG** workflow built on the robot's multimodal memory
     curl -fsSL https://ollama.com/install.sh | sh
     ```
 
-## Usage
-### Step 1- Create a Memory database and the Scene Graph
-- Before you can use the STaR agent, you need to build robot memory.
-- Read [here](BuildMemory.md) for more details about how to multimodal robot memory.
-- Read [here](INSTALL.md) to learn more about how to configure the system.
-
-### Step 2 - Open the User Interface
-STaR is designed to interact with users via a website. <br>
-To start the user interface, run `python3 scripts/run_gradio_interface.py`, then you can open the brower and go to `127.0.0.1:<your port number>` (Note: you can find the generated link directly in the terminal window and click it to open the interface automatically).<br>
-In order to allow the agent to execute multi-modal tasks, you also have to run `python3 scripts/run_camera_subscriber.py` to get the image from the publisher.
-
-### Step 3 - Create the Agent
-Now that you have created the memory and the scene graph for the agent. <br>
+## Run 
+Now that you have created the memory for the agent. <br>
 You can run `python3 scripts/eval_agent.py` to create the agent, the agent will wait for the user's question.
-
-### Step 4 - Run the Agent!
-Enter questions in the text area, and optinally you can press update button to get the current image of the robot. <br>
-Then press submit button, the agent will then search from it's memory and then navigate to the position or answer the question.
-
-## Note
-It is recommended to use the ROS2 Node to publish the data when validating the agent's performance. We validated our framework using the CODA dataset, you can check `scripts/write_coda_rosbag.py`.
