@@ -1,5 +1,16 @@
-# Running
-STaR is a project that utilize LLM, VLM, and scene graph to build and reason over long term spatio-temporal memories.
+# Running-STaR Agentic RAG
+
+STaR supports an **Agentic RAG** workflow built on the robot's multimodal memory.
+
+Given an open-ended user query, the STaR agent:
+
+- Plans an effective memory retrieval strategy.
+- Autonomously invokes the appropriate retrieval tools.
+- Retrieves the most relevant multimodal memories from the robot's long-term memory.
+- Performs cross-modal contextual reasoning over the retrieved memories.
+- Generates an accurate and context-aware response.
+
+This design enables efficient reasoning over long-horizon, redundant robot memories while retrieving only the information relevant to the user's task.
 
 ## Setup
 1. It is recommended to use docker to run the project as we use the config files for docker by default, check [here](INSTALL.md) to learn how to run on docker container.
