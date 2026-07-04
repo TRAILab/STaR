@@ -284,27 +284,3 @@ Records the complete reasoning process, including:
 /workspace/results/<sequence>/cot_log/<postfix>/
     cot_log_<idx>.txt
 ```
-
----
-
-# Workflow Overview
-
-```text
-User Question
-      │
-      ▼
- Agent Planning
-      │
-      ▼
-Memory Retrieval
-(Video + Scene Graph + Images)
-      │
-      ▼
-Cross-modal Reasoning
-      │
-      ▼
-Answer Generation
-      │
-      ▼
- Gradio Visualization
-```
