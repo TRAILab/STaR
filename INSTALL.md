@@ -39,7 +39,7 @@ If you want to rebuild the image, you can run
 ./run_star.sh --rebuild
 ```
 ## Usage
-Before running the **STaR Agentic RAG** evaluation, you must first build the robot's multimodal memory. Please follow the instructions in [Memory Construction](BuildMemory.md).
+Before running the **STaR Agentic RAG** (UserQuery.md) evaluation, you must first build the robot's multimodal memory. Please follow the instructions in [Memory Construction](BuildMemory.md).
 
 After you collect the data with the code run in container, you should be about to see a folder called `result`.
 ## Notes
