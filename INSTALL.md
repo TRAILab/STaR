@@ -6,7 +6,7 @@
 ## Mount your files to the container
 You can navigate to `docker-compose.yml` to modify the files that you want to mount to the container.
 ## Prepare Third Party Models
-You can check the [install instruction](SETUP.md) for more details about the required models. You can download the weights on your host machine using `scripts/bash/download_weights.sh` and then mount to the container, modify the docker-compose.yml to configure the mount.
+You can download the weights on your host machine using `scripts/bash/download_weights.sh` and then mount to the container, modify the docker-compose.yml to configure the mount. You can also check the [install instruction](SETUP.md) for more details about the required models. 
 ## After Preparation
 After you prepared the container and the models, the file structure should look like this:
 ```
