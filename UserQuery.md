@@ -33,16 +33,14 @@ This guide covers two common ways to run STaR question answering:
 2. Ask live questions from the Gradio web interface.
 
 
-0. Start Milvus
----------------
+**0. Start Milvus**
 
 Start Milvus before running the agent:
 
     bash launch_milvus_container.sh start
 
 
-1. Check The Config
--------------------
+**1. Check The Config**
 
 Main config:
 
@@ -67,8 +65,7 @@ Gradio path config:
     configs/inference/docker.yaml
 
 
-2. Prepare The Expected Files
------------------------------
+**2. Prepare The Expected Files**
 
 The default Docker paths are:
 
@@ -88,8 +85,7 @@ The default Docker paths are:
         /workspace/data/coda/questions/<sequence>/<qa_file>.json
 
 
-3. Run eval_AIB.py On Existing Questions
-----------------------------------------
+**3. Run eval_AIB.py On Existing Questions**
 
 Base command:
 
@@ -152,8 +148,7 @@ Common options:
         CODa folder containing timestamp files. Default: /workspace/Local_data/CODa.
 
 
-4. Ask Live Questions From Gradio With eval_AIB.py
---------------------------------------------------
+**4. Ask Live Questions From Gradio With eval_AIB.py**
 
 Terminal 1: start the web UI.
 
@@ -174,8 +169,7 @@ If your config uses a different sequence or postfix, pass only those overrides:
       --postfix <postfix>
 
 
-5. What Gradio Displays
------------------------
+**5. What Gradio Displays**
 
 Retrieval score plot
 
