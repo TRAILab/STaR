@@ -1,6 +1,9 @@
 # Memory Construction (RGB-LiDAR Version)
 
-This guide explains how to run `scripts/run_data_collection_lidar.py` to build robot multimodal memory in a task-agnostic way from synchronized RGB images, LiDAR point clouds, and robot poses. The memory includes 3D primitives, video captions, and key frames.
+This guide explains how to use `scripts/run_data_collection_lidar.py` to build the robot's task-agnostic multimodal memory from synchronized RGB images, LiDAR point clouds, and robot poses. The resulting memory includes 3D primitives, video captions, and key frames.
+
+> **Note**
+> An RGB-D version (`scripts/run_data_collection_depth.py`) will be released in a future update.
 
 ## 1. Enter The Docker Container
 
