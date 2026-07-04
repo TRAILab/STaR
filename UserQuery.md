@@ -24,7 +24,7 @@ STaR supports an **Agentic RAG** workflow built on the robot's multimodal memory
     curl -fsSL https://ollama.com/install.sh | sh
     ```
 
-STaR QA Quick Start
+# STaR QA Quick Start
 ===================
 
 This guide covers two common ways to run STaR question answering:
@@ -35,9 +35,9 @@ This guide covers two common ways to run STaR question answering:
 
 **0. Start Milvus**
 
-Start Milvus before running the agent:
+From the STaR repository root, start Milvus before running the agent:
 
-    bash launch_milvus_container.sh start
+    bash scripts/bash/launch_milvus_container.sh start
 
 
 **1. Check The Config**
