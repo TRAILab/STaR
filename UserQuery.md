@@ -24,101 +24,182 @@ STaR supports an **Agentic RAG** workflow built on the robot's multimodal memory
     curl -fsSL https://ollama.com/install.sh | sh
     ```
 
-Running QA and Retrieval
-========================
+STaR QA Quick Start
+===================
 
-STaR supports two common ways to run question answering:
+This guide covers two common ways to run STaR question answering:
 
-1. Evaluate existing questions from a QA JSON file.
-2. Ask live questions through the Gradio interface.
+1. Run evaluation on an existing QA file.
+2. Ask live questions from the Gradio web interface.
 
-Make sure Milvus is running before starting the agent:
+
+0. Start Milvus
+---------------
+
+Start Milvus before running the agent:
 
     bash launch_milvus_container.sh start
 
 
-Important Config
-----------------
+1. Check The Config
+-------------------
 
-The main config is:
+Main config:
 
     configs/config.yaml
 
-Key fields:
+Important fields:
 
     sequence: "0"
     postfix: "CoDa"
 
-`sequence` selects the dataset/run ID.
-`postfix` selects the Gradio output channel and must match the runner argument
-`--postfix`.
+Meaning:
 
-The default Gradio paths are defined in:
+    sequence
+        Dataset / run ID.
+
+    postfix
+        Gradio output channel. This must match the `--postfix` argument used by
+        eval_AIB.py.
+
+Gradio path config:
 
     configs/inference/docker.yaml
 
 
-Expected Data Layout
---------------------
+2. Prepare The Expected Files
+-----------------------------
 
-By default, the scripts expect:
+The default Docker paths are:
 
-    /workspace/results/<sequence>/caption/<caption_file>.json
-    /workspace/results/<sequence>/pcd/<scenegraph_file>.pkl.gz
-    /workspace/results/<sequence>/annotated_rgb/annotated_rgb_<idx>.png
-    /workspace/Local_data/CODa/timestamps/<sequence>.txt
-    /workspace/data/coda/questions/<sequence>/<qa_file>.json
+    Video captions
+        /workspace/results/<sequence>/caption/<caption_file>.json
+
+    Scene graph / point-cloud memory
+        /workspace/results/<sequence>/pcd/<scenegraph_file>.pkl.gz
+
+    Annotated RGB keyframes
+        /workspace/results/<sequence>/annotated_rgb/annotated_rgb_<idx>.png
+
+    Raw frame timestamps
+        /workspace/Local_data/CODa/timestamps/<sequence>.txt
+
+    QA questions
+        /workspace/data/coda/questions/<sequence>/<qa_file>.json
 
 
-Run eval_AIB.py
----------------
+3. Run eval_AIB.py On Existing Questions
+----------------------------------------
 
-Evaluate existing questions:
+Base command:
 
-    python scripts/eval_AIB.py \
-      --question_source dataset \
-      --method star \
-      --llm gpt-4.1 \
-      --sequence_id 0 \
-      --postfix CoDa
+    python scripts/eval_AIB.py
+
+By default, this runs dataset evaluation with:
+
+    --question_source dataset
+    --manual_evaluation True
+    --method star
+    --llm gpt-4.1
+    --sequence_id 0
+    --postfix CoDa
+
+Override only the options you need. For example:
+
+    --manual_evaluation False
+        Run all selected questions automatically.
+
+    --manual_evaluation True
+        Step through questions manually. The script asks before each question,
+        and you can run, skip, jump to an index, or quit.
 
 Available methods:
 
-    --method star
-    --method remembr
-    --method scene_graph
+    star
+        STaR / AIB retrieval agent.
 
-Useful options:
+    remembr
+        Vanilla ReMEmbR-style baseline.
 
-    --qa_file human_qa
-    --caption_file captions_NVILA-Lite-2B
-    --scenegraph_file full_pcd
-    --results /workspace/results
-    --data_dir /workspace/data/coda
-    --coda_dir /workspace/Local_data/CODa
+    scene_graph
+        Scene-graph baseline.
+
+Common options:
+
+    --sequence_id
+        Dataset / run ID. Default: 0.
+
+    --postfix
+        Gradio output channel. Default: CoDa.
+
+    --qa_file
+        QA file name without .json. Default: human_qa.
+
+    --caption_file
+        Caption file name without .json. Default: captions_NVILA-Lite-2B.
+
+    --scenegraph_file
+        Scene graph file name without .pkl.gz. Default: full_pcd.
+
+    --results
+        Result folder containing captions, scene graph, and annotated images.
+        Default: /workspace/results.
+
+    --data_dir
+        Dataset folder containing QA files. Default: /workspace/data/coda.
+
+    --coda_dir
+        CODa folder containing timestamp files. Default: /workspace/Local_data/CODa.
 
 
-Ask Questions From Gradio
--------------------------
+4. Ask Live Questions From Gradio With eval_AIB.py
+--------------------------------------------------
 
-Terminal 1:
+Terminal 1: start the web UI.
 
     python scripts/run_gradio_interface.py
 
-Terminal 2:
+Terminal 2: start the QA agent.
+
+    python scripts/eval_AIB.py \
+      --question_source gradio
+
+Then open the Gradio URL, type a question, and press Submit.
+
+If your config uses a different sequence or postfix, pass only those overrides:
 
     python scripts/eval_AIB.py \
       --question_source gradio \
-      --method star \
-      --llm gpt-4.1 \
-      --sequence_id 0 \
-      --postfix CoDa
+      --sequence_id <sequence> \
+      --postfix <postfix>
 
-Then open the Gradio URL and submit a question.
 
-Gradio will show:
+5. What Gradio Displays
+-----------------------
 
-    /workspace/results/<sequence>/search_DB/<postfix>/retrieval_DB_<idx>_<postfix>.png
-    /workspace/results/<sequence>/images/<postfix>/<idx>/
-    /workspace/results/<sequence>/cot_log/<postfix>/cot_log_<idx>.txt
+Retrieval score plot
 
+    Path:
+        /workspace/results/<sequence>/search_DB/<postfix>/retrieval_DB_<idx>_<postfix>.png
+
+    Meaning:
+        Shows which video-caption memories were retrieved from the vector
+        database and how relevant they were over time.
+
+Retrieved keyframes
+
+    Path:
+        /workspace/results/<sequence>/images/<postfix>/<idx>/
+
+    Meaning:
+        Visual evidence images selected from the timestamps suggested by the
+        agent.
+
+Agent log
+
+    Path:
+        /workspace/results/<sequence>/cot_log/<postfix>/cot_log_<idx>.txt
+
+    Meaning:
+        Records the user question, retrieval steps, selected timestamps/images,
+        and final reasoning output shown in the Gradio chat.
