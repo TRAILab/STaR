@@ -46,7 +46,7 @@ defaults:
 enable_online_captioning: true
 ```
 
-Important LiDAR parameters are in:
+The parameters for multimodal memory construction are specified in the following configuration file:
 
 ```bash
 configs/scenegraph/collection_docker_coda.yaml
