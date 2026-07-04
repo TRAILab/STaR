@@ -28,7 +28,7 @@ STaR supports an **Agentic RAG** workflow built on the robot's multimodal memory
 
 This guide covers two common ways to run STaR question answering:
 
-1. Run evaluation on an existing QA file.
+1. Run evaluation on an existing NaVQA file.
 2. Ask live questions from the Gradio web interface.
 
 
