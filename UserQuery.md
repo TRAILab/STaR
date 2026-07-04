@@ -25,7 +25,6 @@ STaR supports an **Agentic RAG** workflow built on the robot's multimodal memory
     ```
 
 # STaR QA Quick Start
-===================
 
 This guide covers two common ways to run STaR question answering:
 
