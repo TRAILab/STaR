@@ -18,10 +18,9 @@ Throughout this repository, these numbers are referred to as **sequence IDs**. E
 Clone the [CODa-devkit](https://github.com/ut-amrl/coda-devkit) and download a sequence:
 
 ```bash
-git clone git@github.com:ut-amrl/coda-devkit.git
-cd coda-devkit
-
 # Download sequence 0 (≈15 GB)
+conda activate coda
+
 python scripts/download_split.py -d /path/to/CODa -t sequence -se 0
 ```
 
