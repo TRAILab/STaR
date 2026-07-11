@@ -55,7 +55,7 @@ CODa/
 > This step is only required if you plan to evaluate on **NaVQA**.
 >
 > > Before proceeding, complete the following prerequisites in order:
-> 1. Set up the project Docker environment by following the instructions in [**Install**](INSTALL.md).
+> 1. Set up the project Docker environment by following the instructions in [**Installation**](INSTALL.md).
 > 2. Complete the [**Memory Construction**](BuildMemory.md) pipeline.
 
 
