@@ -2,13 +2,6 @@
 
 This guide describes how to prepare the **NaVQA** evaluation dataset for STaR.
 
-## Prerequisites
-
-Before preparing the evaluation dataset, complete the following steps in order:
-
-1. Set up the project environment by following the [**Installation Guide**](INSTALL.md).
-2. Complete the [**Memory Construction**](BuildMemory.md) pipeline to generate the required **video captions**.
-
 ---
 
 ## 1. Download the CODa Dataset
@@ -74,7 +67,7 @@ CODa/
 ```
 
 
-## 2 Prepare the NaVQA Evaluation Dataset
+## 2. Prepare the NaVQA Evaluation Dataset
 
 > **Note**
 >
