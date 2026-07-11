@@ -2,9 +2,15 @@ For evaluation on NaVQA, we provide the following download instructions and an o
 
 ### Download the Dataset
 
-Follow the instructions in the [CODa dataset](https://amrl.cs.utexas.edu/coda/download.html) to set up the Conda environment and download the required data sequences. The full dataset contains 22 sequences, but only the subsets listed below are needed for this project. :contentReference[oaicite:1]{index=1}
+Follow the instructions on the [CODa dataset](https://amrl.cs.utexas.edu/coda/download.html) website to set up the Conda environment and download the required data sequences.
 
-We only need 7 of them which are `0, 3, 4, 6, 16, 21, 22`. These numbers will be referred to as sequence IDs. Each sequence ID has 30 questions associated with it.
+The full CODa dataset contains 22 sequences, but this project only requires the following seven sequences:
+
+```text
+0, 3, 4, 6, 16, 21, 22
+```
+
+Throughout this repository, these numbers are referred to as **sequence IDs**. Each sequence ID is associated with **30 question-answer pairs** for evaluation.
 
 > Because of the number of videos, be sure to have a large amount of storage. The processed dataset is ~335GB, but since the pre-processing phase also downloads LiDAR and other outputs, we would recommend having ~500GB extra storage.
 
