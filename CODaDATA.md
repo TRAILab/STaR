@@ -1,36 +1,61 @@
-For evaluation on NaVQA, we provide the following download instructions and an overview of the overall data structure.
+# NaVQA Dataset Preparation
 
-### 1. Download the Dataset
+This guide describes how to prepare the **NaVQA** evaluation dataset for STaR.
 
-Follow the instructions on the [CODa dataset](https://amrl.cs.utexas.edu/coda/download.html) website to set up the Conda environment and download the required data sequences.
+## Prerequisites
 
-The full CODa dataset contains 22 sequences, but this project only requires the following seven sequences:
+Before preparing the evaluation dataset, complete the following steps in order:
+
+1. Set up the project environment by following the [**Installation Guide**](INSTALL.md).
+2. Complete the [**Memory Construction**](BuildMemory.md) pipeline to generate the required **video captions**.
+
+---
+
+## 1. Download the CODa Dataset
+
+NaVQA is built on the **CODa** dataset. Follow the official [CODa download instructions](https://amrl.cs.utexas.edu/coda/download.html) to install the CODa toolkit and download the dataset.
+
+### Install the CODa Toolkit
+
+```bash
+git clone git@github.com:ut-amrl/coda-devkit.git
+cd coda-devkit
+
+conda env create -f environment.yml
+conda activate coda
+```
+
+### Download the Required Sequences
+
+The complete CODa dataset contains **22 sequences**, but STaR only requires the following **7 sequences**:
 
 ```text
 0, 3, 4, 6, 16, 21, 22
 ```
 
-Throughout this repository, these numbers are referred to as **sequence IDs**. Each sequence ID is associated with **30 question-answer pairs** for evaluation.
-
-> Because of the number of videos, be sure to have a large amount of storage. The processed dataset is ~335GB, but since the pre-processing phase also downloads LiDAR and other outputs, we would recommend having ~500GB extra storage.
-
-
-Clone the [CODa-devkit](https://github.com/ut-amrl/coda-devkit) and download a sequence:
+Download each sequence using:
 
 ```bash
-# Download sequence 0 (≈15 GB)
-conda activate coda
+python scripts/download_split.py -d /path/to/CODa -t sequence -se <sequence_id>
+```
 
+For example:
+
+```bash
 python scripts/download_split.py -d /path/to/CODa -t sequence -se 0
 ```
 
-Set the dataset root for convenience:
+For convenience, set the dataset root:
 
 ```bash
 export CODA_ROOT_DIR=/path/to/CODa
 ```
 
-Expected directory structure after download:
+> **Storage Requirement**
+>
+> The processed dataset occupies approximately **335 GB**. During preprocessing, additional LiDAR and intermediate files are downloaded, so we recommend reserving **at least 500 GB** of free disk space.
+
+### Expected Directory Structure
 
 ```
 CODa/
@@ -48,7 +73,8 @@ CODa/
 └── timestamps/       # Per-sequence timestamp files
 ```
 
-## Prepare the NaVQA Evaluation Dataset
+
+## 2 Prepare the NaVQA Evaluation Dataset
 
 > **Note**
 >
@@ -57,7 +83,6 @@ CODa/
 > > Before proceeding, complete the following prerequisites in order:
 > 1. Set up the project Docker environment by following the instructions in [**Installation**](INSTALL.md).
 > 2. Complete the [**Memory Construction**](BuildMemory.md) pipeline.
-
 
 ### 1. Verify the QA annotation file
 
