@@ -1,0 +1,83 @@
+# syntax=docker/dockerfile:1.7-labs
+FROM nvidia/cuda:12.8.1-cudnn-devel-ubuntu22.04
+
+ENV TZ=Canada/Eastern
+ENV DEBIAN_FRONTEND=noninteractive
+ENV ACCEPT_EULA=Y
+ENV PRIVACY_CONSENT=Y
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+ENV ROS_DISTRO=humble
+ENV ROS_VERSION=2
+ENV ROS_PYTHON_VERSION=3
+
+#* For Pytorch builds
+ENV TORCH_CUDA_ARCH_LIST="8.0 8.6 8.9 12.0+PTX" \
+    TORCH_NVCC_FLAGS="-Xfatbin -compress-all" \
+    FORCE_CUDA=1
+#* last version should have +PTX
+
+
+# Ensure CUDA toolkit path is visible for builds that might fall back to source
+ENV CUDA_HOME=/usr/local/cuda \
+    PATH=$CUDA_HOME/bin:$PATH \
+    LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
+
+SHELL ["/bin/bash", "-c"]
+
+#? System Packages
+# COPY apt_packages.txt .
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates nano gnupg ubuntu-keyring curl git && \
+    update-ca-certificates -f && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /var/cache/apt/archives/*.deb
+
+#? Speed up apt: disable recommends/suggests to reduce install set
+RUN printf 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";\n' > /etc/apt/apt.conf.d/99norecommend
+
+WORKDIR /workspace
+
+#* ------- Start of ROS2 installation -------
+
+#? Install ROS2
+RUN apt-get update && apt-get install -y locales \
+ && sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen \
+ && locale-gen
+
+RUN locale-gen en_US en_US.UTF-8
+RUN update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+
+# COPY fastdds.xml /workspace/fastdds.xml
+ENV FASTRTPS_DEFAULT_PROFILES_FILE /home/workspace/fastdds.xml
+ENV RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+
+# RUN apt-get update && \
+#     export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}') && \
+#     curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo ${UBUNTU_CODENAME:-${VERSION_CODENAME}})_all.deb" && \
+#     dpkg -i /tmp/ros2-apt-source.deb && \
+#     rm /tmp/ros2-apt-source.deb
+
+RUN apt install software-properties-common -y
+RUN add-apt-repository universe
+RUN apt update && apt install curl -y
+RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
+-o /usr/share/keyrings/ros-archive-keyring.gpg
+
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
+    http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | \
+    tee /etc/apt/sources.list.d/ros2.list > /dev/null
+RUN apt update && apt install ros-humble-desktop -y
+
+RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
+
+# Install UV
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.local/bin:$PATH"
+RUN uv --version
+
+RUN mkdir /bootstrap
+COPY pyproject.bootstrap.toml /bootstrap/pyproject.toml
+COPY constraints.txt /workspace/constraints.txt
+RUN cd /bootstrap && uv sync

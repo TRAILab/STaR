@@ -1,0 +1,153 @@
+# syntax=docker/dockerfile:1.7-labs
+FROM base-uv-dev:latest
+
+ENV TZ=Canada/Eastern
+ENV DEBIAN_FRONTEND=noninteractive
+ENV ACCEPT_EULA=Y
+ENV PRIVACY_CONSENT=Y
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+ENV ROS_DISTRO=humble
+ENV ROS_VERSION=2
+ENV ROS_PYTHON_VERSION=3
+
+#* For Pytorch builds
+ENV TORCH_CUDA_ARCH_LIST="8.0 8.6 8.9 12.0+PTX" \
+    TORCH_NVCC_FLAGS="-Xfatbin -compress-all" \
+    FORCE_CUDA=1
+#* last version should have +PTX
+
+# Ensure CUDA toolkit path is visible for builds that might fall back to source
+ENV CUDA_HOME=/usr/local/cuda \
+    PATH=$CUDA_HOME/bin:$PATH \
+    LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
+
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.local/bin:$PATH"
+RUN uv --version
+
+RUN mkdir /workspace/third_parties
+WORKDIR /workspace/third_parties
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends unzip wget && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libopenblas-dev \
+        libomp-dev \
+        libglib2.0-0 \
+        libgl1 && \
+    rm -rf /var/lib/apt/lists/*
+
+#? Install TAG2TEXT Model
+RUN cd /workspace/third_parties && \
+    git clone https://github.com/xinyu1205/recognize-anything.git && \
+    cd recognize-anything && \
+    uv pip install \
+      --python /bootstrap/.venv/bin/python \
+      --no-build-isolation \
+      -e . \
+      -c /workspace/constraints.txt
+
+#? Install Grounding DINO Model
+RUN cd /workspace/third_parties && \
+    wget https://github.com/IDEA-Research/GroundingDINO/archive/34ef00dcdf5cadb84c21b59db4fc42a4d4c75047.zip && \
+    unzip 34ef00dcdf5cadb84c21b59db4fc42a4d4c75047.zip && \
+    mv ./GroundingDINO-34ef00dcdf5cadb84c21b59db4fc42a4d4c75047 ./GroundingDINO &&\
+    cd GroundingDINO && \
+    uv pip install \
+      --python /bootstrap/.venv/bin/python \
+      --no-build-isolation \
+      . \
+      -c /workspace/constraints.txt
+RUN rm 34ef00dcdf5cadb84c21b59db4fc42a4d4c75047.zip
+
+#? Install TAP Model
+# COPY --chown=$USERNAME:$USERNAME tokenize-anything ./tokenize-anything
+RUN cd /workspace/third_parties && \
+    git clone https://github.com/baaivision/tokenize-anything.git tokenize-anything && \
+    cd tokenize-anything && \
+    uv pip install \
+      --python /bootstrap/.venv/bin/python \
+      --no-build-isolation \
+      -e . \
+      -c /workspace/constraints.txt
+RUN echo '__version__ = "0.0.0"' > /workspace/third_parties/tokenize-anything/tokenize_anything/version.py
+
+# Install MinkowskiEngine
+# RUN /bootstrap/.venv/bin/python -m ensurepip --upgrade
+RUN cd /workspace/third_parties && \
+    git init MinkowskiEngine \
+    && cd MinkowskiEngine \
+    && git remote add origin https://github.com/CiSong10/MinkowskiEngine.git \
+    && git fetch --depth=1 origin 829bf19859c650776f9466dd2b14b44a91eb1fa9 \
+    && git checkout FETCH_HEAD \
+    && sed -i '/sources=.*BIND_FILES.*/a\        define_macros=[('"'"'NVTX_DISABLE'"'"', None)],' setup.py \
+    && sed -i 's/\bauto __raw = __to_address(__r.get());/auto __raw = std::__to_address(__r.get());/' /usr/include/c++/11/bits/shared_ptr_base.h \
+    && sed -i '/sources=.BIND_FILES./a\ define_macros=[('"'"'NVTX_DISABLE'"'"', None)],' setup.py \
+    && sed -i '315d' setup.py \
+    && sed -i 's/run_command("pip", "uninstall", "MinkowskiEngine", "-y")/print("skip uninstall")/' setup.py \
+    && /bootstrap/.venv/bin/python setup.py install --force_cuda --blas=openblas
+
+# 4DMOS is optional and only needed when scenegraph.filter_dynamic=true.
+# It is disabled by default because the LiDAR memory construction pipeline can
+# run without dynamic-object filtering.
+# RUN cd /workspace/third_parties && \
+#     git clone https://github.com/PRBonn/4DMOS.git && \
+#     cd 4DMOS && \
+#     uv pip install \
+#       --python /bootstrap/.venv/bin/python \
+#       --no-build-isolation \
+#       -c /workspace/constraints.txt \
+#       .
+
+#? Install NVILA
+# COPY --chown=$USERNAME:$USERNAME VILA ./VILA
+RUN cd /workspace/third_parties && \
+    git clone https://github.com/NVlabs/VILA.git && \
+    cd VILA && \
+    uv pip install \
+      --python /bootstrap/.venv/bin/python \
+      --no-deps \
+      -e ".[train,eval]" \
+      -c /workspace/constraints.txt && \
+    cp -rv ./llava/train/deepspeed_replace/* \
+      "$(/bootstrap/.venv/bin/python -c 'import site; print(site.getsitepackages()[0])')/deepspeed/"
+
+# --------------------------------------------------------------------
+# Fix VILA required dependencies (must match vila==2.0.0 requirements)
+# --------------------------------------------------------------------
+
+# RUN python -m pip install \
+#     "bitsandbytes>=0.43.2,<0.44" \
+#     "datasets>=2.20,<3" \
+#     "decord>=0.6,<1" \
+#     "einops-exts>=0.0.4,<1" \
+#     "fire" \
+#     "markdown2[all]" \
+#     "nltk>=3.8" \
+#     "openpyxl>=3.1.2,<4" \
+#     "pytorchvideo>=0.1.5,<0.2" \
+#     "pywsd>=1.2.4" \
+#     "seaborn" \
+#     "shortuuid" \
+#     "webdataset>=0.2.86,<0.3" \
+#     "xgrammar" \
+#     "openai>=1.0,<2" \
+#     "gradio_client>=0.14,<1" \
+#     "git+https://github.com/bfshi/scaling_on_scales#egg=s2wrapper"\
+#     "loguru"
+
+RUN apt update && \
+    apt install -y ros-humble-tf-transformations
+
+RUN echo "source /bootstrap/.venv/bin/activate" >> ~/.bashrc
+
+WORKDIR /workspace
+
+#* Notes:
+#* - check if there are multiple versions of nccl installed for debugging
+    #* pip list | grep nccl
+#* - sudo apt clean and docker builder prune if run into gpg key issues

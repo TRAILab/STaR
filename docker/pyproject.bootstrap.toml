@@ -1,0 +1,97 @@
+[project]
+name = "star"
+version = "0.1.2"
+description = "Source code of STAR"
+requires-python = "==3.10.*"
+dependencies = [
+    "numpy==1.26.4",
+    "faiss-cpu",
+    "psutil",
+    "tyro",
+    "open-clip-torch>=2.23.0",
+    "h5py",
+    "openai",
+    "torch==2.7.1",
+    "torchvision==0.22.1",
+
+    "pytorch3d @ git+https://github.com/facebookresearch/pytorch3d.git",
+    "hydra-core",
+    "distinctipy",
+    "gradio==4.44.1",
+    "fastapi==0.112.4",
+    "starlette==0.38.6",
+    "gradio-image-prompter",
+    "protobuf==3.20.*",
+    "langchain==0.2.14",
+    "langchain-core",
+    "langchain-community",
+    "langgraph",
+    "langchain_openai",
+    "langchain_huggingface",
+    "langchain_nvidia_ai_endpoints",
+    "pymilvus",
+    "accelerate==1.11.0",
+    "deepspeed==0.18.1",
+    "pydantic==2.12.3",
+    "numpy==1.26.4",
+    "scipy",
+    "thinc<8.3.0,>=8.2.0",
+    "open3d>=0.19.0",
+    "spacy<3.8.0,>=3.7.0",
+    "ollama",
+    "timm>=1.0.17",
+    "transformers[sentencepiece]==4.46.3",
+    "fairscale==0.4.4",
+    "pycocoevalcap",
+    "Pillow",
+    "clip @ git+https://github.com/openai/CLIP.git",
+    "sentencepiece",
+    "lightning>2",
+    "torchmetrics>=1.5.1",
+    "opencv-python>=4.10.0.84,<4.12",
+    "scikit-build-core",
+    "peft==0.13.2",
+
+    "packaging",
+    "ninja",
+    "setuptools==69.5.1",
+    "wheel",
+    "cmake",
+    "pybind11",
+
+    "addict",
+    "yapf",
+    "supervision>=0.22.0",
+    "pycocotools",
+
+    "ps3-torch",
+    "termcolor",
+    "imageio",
+    "scikit-image",
+    "transforms3d",
+    "loguru",
+    "s2wrapper @ git+https://github.com/bfshi/scaling_on_scales.git",
+    "flash-attn==2.8.3",
+    "pyarrow==13.0.0",
+    "datasets",
+    "natsort"
+]
+
+[tool.uv.extra-build-dependencies]
+pytorch3d = ["torch"]
+
+[tool.uv]
+no-build-isolation-package = ["flash-attn"]
+
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-cu128" },
+]
+torchvision = [
+  { index = "pytorch-cu128" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
