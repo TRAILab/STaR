@@ -1,7 +1,8 @@
 For evaluation on NaVQA, we provide the following download instructions and an overview of the overall data structure.
 
-## Download and preprocess the CODa dataset
-First download the relevant subsets of the [CODa dataset](https://amrl.cs.utexas.edu/coda/download.html), which consists of 22 sequences. 
+### Download the Dataset
+
+First, follow the instructions in the link below to set up the Conda environment and download the required data sequences from the [CODa dataset](https://amrl.cs.utexas.edu/coda/download.html). The complete CODa dataset consists of 22 sequences, but only the subsets listed below are required for this project. :contentReference[oaicite:0]{index=0}
 
 We only need 7 of them which are `0, 3, 4, 6, 16, 21, 22`. These numbers will be referred to as sequence IDs. Each sequence ID has 30 questions associated with it.
 
