@@ -6,7 +6,7 @@ This guide describes how to prepare the **NaVQA** evaluation dataset for STaR.
 
 ## 1. Download the CODa Dataset
 
-NaVQA is built on the **CODa** dataset. Follow the official [CODa download instructions](https://amrl.cs.utexas.edu/coda/download.html) to install the CODa toolkit and download the dataset.
+NaVQA is built on the **CODa (UT Campus Object Dataset)**, a large-scale real-world robotics dataset collected on the **University of Texas at Austin campus** using a mobile robot platform (Husky). It contains synchronized multimodal sensor data (RGB images, 3D LiDAR, IMU, and global poses) captured across **mixed indoor and outdoor environments**, making it well suited for long-horizon navigation and embodied AI research. Check the official [CODa download instructions](https://amrl.cs.utexas.edu/coda/download.html) for more details.
 
 ### Install the CODa Toolkit
 
