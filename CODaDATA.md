@@ -1,6 +1,6 @@
 For evaluation on NaVQA, we provide the following download instructions and an overview of the overall data structure.
 
-### Download the Dataset
+### 1. Download the Dataset
 
 Follow the instructions on the [CODa dataset](https://amrl.cs.utexas.edu/coda/download.html) website to set up the Conda environment and download the required data sequences.
 
@@ -54,7 +54,10 @@ CODa/
 >
 > This step is only required if you plan to evaluate on **NaVQA**.
 >
-> Complete the [**Memory Construction**](BuildMemory.md) pipeline first, then return to this section. The preprocessing script requires the generated **video captions**.
+> > Before proceeding, complete the following prerequisites in order:
+> 1. Set up the project Docker environment by following the instructions in [**Install**](INSTALL.md).
+> 2. Complete the [**Memory Construction**](BuildMemory.md) pipeline.
+
 
 ### 1. Verify the QA annotation file
 
