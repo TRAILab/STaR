@@ -44,7 +44,7 @@ The first build installs:
 
 > **Note**
 >
-> The initial build may take around **one hour**, depending on your internet connection and system performance.
+> The initial build may take roughly **half an hour to an hour**, depending on your internet connection and system performance.
 
 ---
 
