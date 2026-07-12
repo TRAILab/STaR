@@ -40,9 +40,9 @@ services:
       # ---- Dataset ---- (update with your dataset path)
       - /home/trailbot/star_project/:/workspace/Local_data
       # ----Model Checkpoints (update with your model checkpoints path)---
-      - /media/ssd/weights/:/workspace/star/weights
+      #- /media/ssd/weights/:/workspace/star/weights
       - ../data/:/workspace/data
-      - ../data/coda/:/workspace/coda
+      #- ../data/coda/:/workspace/coda
       # ---- Output / Results ----
       - ../results:/workspace/results
       # ---- Pre-downloaded Model Weights (Static Files) ----
