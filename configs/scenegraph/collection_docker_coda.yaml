@@ -1,0 +1,161 @@
+# Load dataset and sequence info
+basedir: /workspace/star
+sequence: ${..sequence}
+stride: 10 
+start: 0
+end: -1 # 2000
+start_timestamp: 0.0
+calib_path: /workspace/star/configs/calib_coda.txt
+
+# Caption generation related
+save_vis: !!bool False                          # Whether to save visualization
+save_cap: !!bool False                          # Whether to save caption data
+save_vis_path: /workspace/results/${sequence}/vis/
+save_video_path: /workspace/results/${sequence}/processed/
+save_cap_path: /workspace/results/${sequence}/caption/
+tag2text_path: /workspace/star/weights/tag2text_swin_14m.pth
+gd_path: /workspace/third_parties/GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py
+gd_weights: /workspace/star/weights/groundingdino_swint_ogc.pth
+tap_path: /workspace/star/weights/tap_vit_l_v1_0.pkl
+tap_merge_path: /workspace/star/weights/merged_2560.pkl
+sbert_path: /workspace/star/weights/all-MiniLM-L6-v2
+save_vis_proj_path: /workspace/results/${sequence}/project/
+
+# Point cloud map generation related
+filter_dis: !!bool True                        # Whether to filter out distant objects
+front_axis: "x"                                # CODa/KITTI-style coordinates use x as the forward axis
+max_depth: 20.0 #50.0                          # Set maximum point cloud distance, do not exceed
+bg_rate: 0.60                                  # Probability of being considered background
+min_points_threshold: 30                       # Instances below this count in a single frame are discarded
+# 4DMOS dynamic filtering is disabled for now.
+# filter_dynamic: !!bool False
+# mos_path: /workspace/star/weights/10_scans.ckpt
+# moving_thre: 0.5
+dbscan_remove_noise: !!bool True               # Whether to remove noise through clustering
+dbscan_eps:  0.25 #0.4                         # Clustering parameter
+dbscan_min_points: 35                        # Clustering parameter
+voxel_size: 0.08                                # Point cloud downsampling value
+bbox_mode: aabb                                 # Object bbox type for merging/visualization: "obb" or "aabb".
+vis_all: !!bool True                           # Whether to visualize before final processing
+
+save_SoM: !!bool True                       # save annotated rgb 
+back_projection: !!bool False                # project lidar pointclouds back to Image for debugging
+resolution: 0.1                                   # resolution of the map
+
+annotated_rgb_path: /workspace/results/${sequence}/annotated_rgb/       # annotated rgb path
+message_path: /workspace/results/${sequence}/message/       # message path
+
+observation_buffer_size: -1 # -1 for all observations, 1 for the latest observation, otherwise set to a positive integer
+finish_idle_sec: 30.0                       # Print completion notice after this many idle seconds with empty buffers
+finish_status_interval_sec: 5.0             # Print pending scenegraph/caption buffer sizes at this interval while idle
+print_buffer_status_every_frame: true       # Print scenegraph/video-caption buffer sizes for each emitted observation window
+num_history: 3                                # Number of historical frames to consider for incremental fusion
+instruction_path: /workspace/results/${sequence}/instructions/
+COT_LOG_PATH: /workspace/results/${sequence}/cot_log/       # COT log path
+
+# Incremental fusion related
+use_dam: !!bool False
+use_bg: !!bool True                          # Whether to use background as an object
+spatial_weight: 1.0                            # Spatial similarity weight, this is very important
+caption_weight: 0.2 # 0.8                            # Caption similarity weight
+ft_weight: 0.4 # 0.6                                 # Feature similarity weight
+sim_threshold: 0.7                             # Integration similarity score threshold
+llama_max_seq_len: 512                         # Llama maximum input token length
+llama_max_batch_size: 16                        # Llama maximum dialog batch size
+
+# Map saving and post-processing
+save_pcd: !!bool True                          # Whether to save the final map
+save_pcd_path: /workspace/results/${sequence}/pcd/     # Path to save the PCD map
+obj_min_points: 50                             # Minimum points for objects in the final point cloud
+obj_min_detections: 2                          # Minimum detections for objects in the final point cloud
+merge_final: !!bool True                       # Whether to merge the final map
+merge_overlap_thresh: 0.1                      # Overlap threshold for merging final point clouds
+merge_ft_thresh: 0.3                           # Feature similarity threshold for merging
+max_caption_num: 2                             # Maximum number of captions to accumulate
+class_methods: chatgpt                             # Method for determining final class labels: sbert, llama, gpt
+gpt_max_num: 10                                # Maximum number of queries for GPT at once
+spacy: !!bool True                             # Whether to use Spacy for extraction when class_methods=sbert
+caption_only: !!bool True                     # Whether to use only pure captions for alignment when spacy=True
+
+# visualizationsettings
+vis_interval: 10000 # visualize every N frames, set to a large number to visualize less frequently
+result_path: /workspace/results/${vis_sequence}/pcd/full_pcd.pkl.gz       # Path to the full PCD result
+vis_ft_weight: 0.5                                                            # Feature weight for multimodal retrieval
+vis_caption_weight: 0.5                                                       # Caption weight for multimodal retrieval
+
+# TrailBot sensor calibration
+image_width: 1280
+image_height: 720
+camera_projection_matrix:  # 3x4 RGB camera projection matrix P.
+  - [766.0866544244, 0.0, 632.8835372925, 0.0]
+  - [0.0, 766.0866544244, 525.7470436096, 0.0]
+  - [0.0, 0.0, 1.0, 0.0]
+lidar_to_camera_matrix:   # 4x4 transform from LiDAR frame to RGB camera frame, used for projecting LiDAR points into the image.
+  - [-0.0324574, -0.99947312, -0.00000005, 0.08]
+  - [-0.14228826, 0.00462079, -0.98981448, -0.1]
+  - [0.98929296, -0.0321268, -0.14236327, -0.03]
+  - [0.0, 0.0, 0.0, 1.0]
+camera_intrinsic_matrix:  # 3x3 RGB camera intrinsic matrix K.
+  - [1104.0, 0.0, 615.34]
+  - [0.0, 1103.9, 310.33]
+  - [0.0, 0.0, 1.0]
+
+# NVILA related
+model_name: NVILA-Lite-2B
+model_path: Efficient-Large-Model/NVILA-Lite-2B # Efficient-Large-Model/NVILA-Lite-2B # Efficient-Large-Model/NVILA-8B #
+model_base: null
+seq_id: 0
+data_path: ./semantickitty # ./coda_data
+out_path: /workspace/results/${sequence}
+output_dir: /workspace/results/${sequence}/caption/       # Path to save the caption
+captioner_name: NVILA-Lite-2B # NVILA-8B # 
+caption_freq: 3
+video_file: null
+num_video_frames: 6
+# university campus
+query: "<video>\n You are a mobile robot navigating a campus-like environment. From your egocentric point of view. Describe this 3-second robot observation in 3 to 5 concise sentences. Mention people, objects, visible text (e.g., building names, signs, labels, logos, room numbers, product names, and other readable words), and important scene context. Keep it under 120 words. End with a complete sentence. Do not change line."
+conv_mode: auto # llama_3
+sep: ","
+temperature: 0.2
+top_p: null
+num_beams: 1
+max_new_tokens: 512
+
+json_mode: !!bool True
+json_schema: null
+media: null
+# caption_file: captions_nvila_2b # captions_nvila_8b #
+
+# ROS2 topic related
+lidar_topic: '/lidar/pointcloud'
+rgb_cam_topic: '/camera/image_raw' #'/camera/image_raw'
+
+tf_lookup_mode: latest # latest or timestamp
+tf_lookup_timeout_sec: 0.05
+
+# Extrinsic calibration matrices
+base_to_cam_matrix:
+  - [0, -1, 0, 0.010]  # Flip the X-axis
+  - [0, 0, -1, 0.261]  # Flip the Y-axis
+  - [1, 0, 0, -0.440] # 0.6019407510757446],  # Z-axis remains the same
+  - [0, 0, 0, 1]   # Homogeneous coordinate
+
+base_link_to_lidar_matrix:  # 4x4 transform from robot base_link frame to LiDAR frame.
+  - [ 0.999708,    0.00385304,  -0.0238717,   -0.301367]
+  - [0.00460475, -0.999493,    0.0315151,    0.006512]
+  - [-0.0237382, -0.0316158,  -0.999218,    -0.626087]
+  - [0, 0, 0, 1]
+  
+# Per-object floor trimming.
+# `floor_trim_vertical_axis` selects the vertical coordinate in object/world space.
+# `floor_trim_floor_at_max` should be true when floor points lie at larger values on that axis.
+floor_trim_vertical_axis: 2
+floor_trim_floor_at_max: true
+
+# Runtime logging controls
+enable_timing_logs: False             # Print timing summaries for scenegraph fetch/build and video captioning.
+timing_log_every_n: 1                     # Print timing/caption-detail logs every N scenegraph frames or caption segments.
+print_scenegraph_captions: True           # Print per-object captions generated during scenegraph detection/merge.
+print_video_captions: True                # Print the full generated video-level caption text for each caption segment.
+memory_log_interval: 1                    # Print caption-memory size every N saved caption segments; set 0 to disable.
+verbose: false                            # Print low-level debug details such as mask indices, image save paths, and frame markers.
