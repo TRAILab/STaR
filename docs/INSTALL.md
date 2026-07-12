@@ -114,7 +114,7 @@ After you collect the data with the code run in container, you should be about t
    Recreate the container after changing this value:
    ```bash
    cd docker
-   docker compose up -d --force-recreate
+   ./run_star.sh --reset
    ```
 
 2. **ROS 2 topics are visible, but no data is received**
@@ -126,7 +126,8 @@ After you collect the data with the code run in container, you should be about t
 
 3. **Unable to visualize the scene graph from the Docker container**
 
-   On the **host machine**, allow local Docker containers to access the X server:
+   In a terminal on the **host machine** (not inside the container), allow
+   local Docker containers to access the X server:
    ```bash
    xhost +local:
    ```
