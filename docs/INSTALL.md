@@ -1,140 +1,228 @@
 # Run with Docker Container
-## Prepare Docker Container
-1. Follow the instructions [here](https://docs.docker.com/get-started/) to install docker on your device.
-2. Follow the instructions [here](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) to install the NVIDIA container toolkit.
-3. Build and start the development container in two steps. First, build the
-   reusable base image from the repository root:
 
-   ```bash
-   cd docker
-   docker build -t base-uv-dev:latest -f Dockerfile.cuda128_humble_uv .
-   ```
+## Compatibility
 
-   This initial build installs ROS, CUDA-enabled PyTorch, and core Python
-   dependencies. It can take about one hour, depending on your internet
-   connection and system performance.
+The current Docker environment has been tested on:
 
-   Then, from the `docker` directory, start the STaR development container:
+- **Operating System:** Ubuntu (x86_64)
+- **ROS:** ROS 2 Humble
+- **CUDA:** 12.8
+- **GPU:** NVIDIA RTX 4090 / RTX 5090
+- **Docker:** Docker Compose v2
 
-   ```bash
-   ./run_star.sh
-   ```
+> **Note**
+>
+> A ROS 2 Jazzy branch for NVIDIA DGX Spark (ARM) will be released in a future update.
 
-   With the default directory layout below, no changes to
-   `docker/docker-compose.yml` are required. The script uses the base image,
-   builds the STaR image when necessary, starts the container, and opens an
-   interactive shell.
+---
 
-## Default host layout and mounts
+# 1. Prepare the Docker Environment
 
-The supplied Compose configuration uses paths relative to
-`STaR/docker/docker-compose.yml`. Keep the repository and dataset in this
-layout to run without editing the Compose file:
+## Install Docker
+
+Follow the official installation guides:
+
+- Docker: https://docs.docker.com/get-started/
+- NVIDIA Container Toolkit: https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html
+
+---
+
+## Build the Base Image
+
+From the `docker` directory:
+
+```bash
+cd docker
+docker build -t base-uv-dev:latest -f Dockerfile.cuda128_humble_uv .
+```
+
+The first build installs:
+
+- ROS 2
+- CUDA-enabled PyTorch
+- Core Python dependencies
+
+> **Note**
+>
+> The initial build may take around **one hour**, depending on your internet connection and system performance.
+
+---
+
+## Launch the Development Container
+
+```bash
+./run_star.sh
+```
+
+The script will automatically:
+
+- Use the reusable base image
+- Build the STaR image if necessary
+- Start the container
+- Open an interactive shell
+
+---
+
+# 2. Project Directory Layout
+
+The default `docker-compose.yml` assumes the following workspace structure:
 
 ```text
 <workspace>/
-├── STaR/                         # this repository
+├── STaR/
 │   ├── docker/
-│   ├── scripts/weights/           # created by download_weights.sh
-│   ├── data/                      # optional project data
-│   └── results/                   # generated outputs
-└── CODa/                          # dataset directory
+│   ├── scripts/
+│   │   └── weights/
+│   ├── data/
+│   └── results/
+└── CODa/
 ```
 
-The default mounts are:
+### Default Volume Mounts
 
-| Host path | Container path | Purpose |
-| --- | --- | --- |
+| Host | Container | Purpose |
+|------|-----------|----------|
 | `STaR/` | `/workspace/star` | Project source code |
 | `STaR/scripts/weights/` | `/workspace/star/weights` | Model checkpoints |
 | `<workspace>/` | `/workspace/Local_data` | Dataset parent directory |
-| `STaR/results/` | `/workspace/results` | Generated results |
+| `STaR/results/` | `/workspace/results` | Generated outputs |
 
-With this layout, the default `basedir` in
-`configs/dataset/CODa_docker.yaml` is `/workspace/Local_data/CODa`.
+With this layout, the default `basedir` in `configs/dataset/CODa_docker.yaml` is:
 
-If you store the project, weights, dataset, or results elsewhere, edit only
-the host-side (left-hand) paths under `volumes:` in
-`docker/docker-compose.yml`. Keep the container-side paths unchanged, update
-`basedir` in the dataset YAML if needed, then recreate the container:
+```text
+/workspace/Local_data/CODa
+```
+
+### Using a Different Directory Layout
+
+If you store the project, dataset, weights, or output directory elsewhere:
+
+1. Edit the **host-side** paths under `volumes:` in:
+
+   ```text
+   docker/docker-compose.yml
+   ```
+
+2. Keep all **container-side** paths unchanged.
+
+3. Update the `basedir` in:
+
+   ```text
+   configs/dataset/CODa_docker.yaml
+   ```
+
+4. Recreate the container:
+
+   ```bash
+   cd docker
+   ./run_star.sh --reset
+   ```
+
+---
+
+# 3. Download Third-Party Models
+
+From the repository root:
+
+```bash
+./scripts/bash/download_weights.sh
+```
+
+The script downloads all required model checkpoints into:
+
+```text
+scripts/weights/
+```
+
+which is automatically mounted inside the container as:
+
+```text
+/workspace/star/weights
+```
+
+See `SETUP.md` for more information about the required third-party models.
+
+---
+
+# 4. Container Management
+
+### Reset the Container
+
+```bash
+./run_star.sh --reset
+```
+
+### Rebuild the Docker Image
+
+```bash
+./run_star.sh --rebuild
+```
+
+---
+
+# 5. Usage
+
+Before running the **STaR Agentic RAG** evaluation, you must first build the robot's multimodal memory.
+
+Please follow the instructions in:
+
+```text
+BuildMemory.md
+```
+
+After data collection and memory construction, the generated outputs will be saved in:
+
+```text
+results/
+```
+
+---
+
+# 6. ROS Configuration & Troubleshooting
+
+## ROS topics are not visible inside the container
+
+Make sure the **host** and the **container** use the same `ROS_DOMAIN_ID`.
+
+Check the current value:
+
+```bash
+# On the host
+echo $ROS_DOMAIN_ID
+
+# Inside the container
+echo $ROS_DOMAIN_ID
+```
+
+If necessary, set it on the host before starting the container:
+
+```bash
+export ROS_DOMAIN_ID=90
+```
+
+Then recreate the container:
 
 ```bash
 cd docker
 ./run_star.sh --reset
 ```
 
-## Prepare Third Party Models
-The download script is located at `scripts/bash/download_weights.sh`. From the
-repository root, run:
+---
+
+## ROS topics are visible but no data is received
+
+Try forcing Fast DDS to use UDP transport:
 
 ```bash
-./scripts/bash/download_weights.sh
+export FASTDDS_BUILTIN_TRANSPORTS=UDPv4
 ```
 
-The script downloads weights to `scripts/weights/`, which is already mounted
-at `/workspace/star/weights` by the default Compose configuration. See the
-[installation instructions](SETUP.md) for details about the required models.
-### Reset the container
-If you want to reset the container, you can run 
-```bash id="m5o5mc"
-./run_star.sh --reset
+---
+
+## Unable to visualize the scene graph
+
+On the **host machine** (not inside the container), allow local Docker containers to access the X server:
+
+```bash
+xhost +local:
 ```
-### Rebuild the image
-If you want to rebuild the image, you can run 
-```bash id="m5o5mc"
-./run_star.sh --rebuild
-```
-## Usage
-Before running the [STaR Agentic RAG](UserQuery.md) evaluation, you need to first build the robot's multimodal memory. Please follow the instructions in [Memory Construction](BuildMemory.md).
-
-After you collect the data with the code run in container, you should be about to see a folder called `result`.
-## Before Running: ROS Configuration and Troubleshooting
-
-1. **ROS 2 topics are not visible inside the container**
-
-   Make sure the host and the container use the same `ROS_DOMAIN_ID`. The
-   Compose file passes the host value into the container and defaults to `0`
-   when it is unset.
-
-   Check the domain ID:
-   ```bash
-   # On the host
-   echo $ROS_DOMAIN_ID
-
-   # Inside the container
-   echo $ROS_DOMAIN_ID
-   ```
-
-   If necessary, set it on the host before starting the container (replace
-   `90` with your desired domain ID):
-   ```bash
-   export ROS_DOMAIN_ID=90
-   ```
-
-   Recreate the container after changing this value:
-   ```bash
-   cd docker
-   ./run_star.sh --reset
-   ```
-
-2. **ROS 2 topics are visible, but no data is received**
-
-   Try forcing Fast DDS to use UDP transport:
-   ```bash
-   export FASTDDS_BUILTIN_TRANSPORTS=UDPv4
-   ```
-
-3. **Unable to visualize the scene graph from the Docker container**
-
-   In a terminal on the **host machine** (not inside the container), allow
-   local Docker containers to access the X server:
-   ```bash
-   xhost +local:
-   ```
-
-4. **Compatibility**
-
-   This Docker image has been tested on x86 systems with NVIDIA RTX 4090 and
-   RTX 5090 GPUs running ROS 2 Humble, CUDA 12.8, and Docker Compose v2.
-
-   A ROS 2 Jazzy branch for NVIDIA DGX Spark (ARM) will be released later.
