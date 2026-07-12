@@ -1,5 +1,0 @@
-History: {context}
-
-Question: {question}
-
-Answer:
