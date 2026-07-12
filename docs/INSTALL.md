@@ -20,21 +20,28 @@
    ./run_star.sh
    ```
 
-   The script uses the base image, builds the STaR image when necessary, starts
-   the container, and opens an interactive shell. Configure the project, model,
-   and dataset mounts in `docker-compose.yml` before running it.
-## Mount your files to the container
-You can navigate to `docker-compose.yml` to modify the files that you want to mount to the container.
+   Before running the script, configure the project, model, and dataset mounts
+   in `docker-compose.yml` as described below. The script then uses the base
+   image, builds the STaR image when necessary, starts the container, and opens
+   an interactive shell.
+
+## Configure host mounts
+
+The container accesses project files, model weights, and datasets through the
+volume mounts in `docker-compose.yml`. Update the host-side paths there to
+match your local setup.
 ## Prepare Third Party Models
-Download the weights on your host machine, from the repository root:
+The download script is located at `scripts/bash/download_weights.sh`. From the
+repository root, run:
 
 ```bash
 chmod +x scripts/bash/download_weights.sh
 ./scripts/bash/download_weights.sh
 ```
 
-Then configure the model-weight mount in `docker-compose.yml`. See the
-[installation instructions](SETUP.md) for details about the required models.
+By default, the script downloads all weights to `scripts/weights/`. Update the
+model-weight volume mount in `docker-compose.yml` to use that directory. See
+the [installation instructions](SETUP.md) for details about the required models.
 ## After Preparation
 After you prepared the container and the models, the file structure should look like this:
 ```
