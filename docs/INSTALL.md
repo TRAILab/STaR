@@ -140,7 +140,8 @@ which is automatically mounted inside the container as:
 /workspace/star/weights
 ```
 
-See `SETUP.md` for more information about the required third-party models.
+See the [third-party model setup guide](SETUP.md) for more information about
+the required models.
 
 ---
 
@@ -164,11 +165,7 @@ See `SETUP.md` for more information about the required third-party models.
 
 Before running the **STaR Agentic RAG** evaluation, you must first build the robot's multimodal memory.
 
-Please follow the instructions in:
-
-```text
-BuildMemory.md
-```
+Please follow the [Memory Construction guide](BuildMemory.md).
 
 After data collection and memory construction, the generated outputs will be saved in:
 
