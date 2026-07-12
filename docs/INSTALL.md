@@ -20,49 +20,60 @@
    ./run_star.sh
    ```
 
-   Before running the script, configure the project, model, and dataset mounts
-   in `docker-compose.yml` as described below. The script then uses the base
-   image, builds the STaR image when necessary, starts the container, and opens
-   an interactive shell.
+   With the default directory layout below, no changes to
+   `docker/docker-compose.yml` are required. The script uses the base image,
+   builds the STaR image when necessary, starts the container, and opens an
+   interactive shell.
 
-## Configure host mounts
+## Default host layout and mounts
 
-The container accesses project files, model weights, and datasets through the
-volume mounts in `docker-compose.yml`. Update the host-side paths there to
-match your local setup.
+The supplied Compose configuration uses paths relative to
+`STaR/docker/docker-compose.yml`. Keep the repository and dataset in this
+layout to run without editing the Compose file:
+
+```text
+<workspace>/
+├── STaR/                         # this repository
+│   ├── docker/
+│   ├── scripts/weights/           # created by download_weights.sh
+│   ├── data/                      # optional project data
+│   └── results/                   # generated outputs
+└── CODa/                          # dataset directory
+```
+
+The default mounts are:
+
+| Host path | Container path | Purpose |
+| --- | --- | --- |
+| `STaR/` | `/workspace/star` | Project source code |
+| `STaR/scripts/weights/` | `/workspace/star/weights` | Model checkpoints |
+| `<workspace>/` | `/workspace/Local_data` | Dataset parent directory |
+| `STaR/results/` | `/workspace/results` | Generated results |
+
+With this layout, the default `basedir` in
+`configs/dataset/CODa_docker.yaml` is `/workspace/Local_data/CODa`.
+
+If you store the project, weights, dataset, or results elsewhere, edit only
+the host-side (left-hand) paths under `volumes:` in
+`docker/docker-compose.yml`. Keep the container-side paths unchanged, update
+`basedir` in the dataset YAML if needed, then recreate the container:
+
+```bash
+cd docker
+docker compose up -d --force-recreate
+```
+
 ## Prepare Third Party Models
 The download script is located at `scripts/bash/download_weights.sh`. From the
 repository root, run:
 
 ```bash
-chmod +x scripts/bash/download_weights.sh
 ./scripts/bash/download_weights.sh
 ```
 
-By default, the script downloads all weights to `scripts/weights/`. Update the
-model-weight volume mount in `docker-compose.yml` to use that directory. See
-the [installation instructions](SETUP.md) for details about the required models.
-## After Preparation
-After you prepared the container and the models, the file structure should look like this:
-```
-/workspace/
-|
-+---star
-|   |
-|   +--- <source code of the project>
-|
-+---third_parties
-    |
-    +---4DMOS
-    |
-    +---VILA
-    |
-    +---GroundingDINO
-    |
-    +---recognize-anything
-    |
-    +---tokenize-anything
-```
+The script downloads weights to `scripts/weights/`, which is already mounted
+at `/workspace/star/weights` by the default Compose configuration. See the
+[installation instructions](SETUP.md) for details about the required models.
 ### Reset the container
 If you want to reset the container, you can run 
 ```bash id="m5o5mc"
