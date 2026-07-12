@@ -78,18 +78,18 @@ RUN echo '__version__ = "0.0.0"' > /workspace/third_parties/tokenize-anything/to
 
 # Install MinkowskiEngine
 # RUN /bootstrap/.venv/bin/python -m ensurepip --upgrade
-RUN cd /workspace/third_parties && \
-    git init MinkowskiEngine \
-    && cd MinkowskiEngine \
-    && git remote add origin https://github.com/CiSong10/MinkowskiEngine.git \
-    && git fetch --depth=1 origin 829bf19859c650776f9466dd2b14b44a91eb1fa9 \
-    && git checkout FETCH_HEAD \
-    && sed -i '/sources=.*BIND_FILES.*/a\        define_macros=[('"'"'NVTX_DISABLE'"'"', None)],' setup.py \
-    && sed -i 's/\bauto __raw = __to_address(__r.get());/auto __raw = std::__to_address(__r.get());/' /usr/include/c++/11/bits/shared_ptr_base.h \
-    && sed -i '/sources=.BIND_FILES./a\ define_macros=[('"'"'NVTX_DISABLE'"'"', None)],' setup.py \
-    && sed -i '315d' setup.py \
-    && sed -i 's/run_command("pip", "uninstall", "MinkowskiEngine", "-y")/print("skip uninstall")/' setup.py \
-    && /bootstrap/.venv/bin/python setup.py install --force_cuda --blas=openblas
+# RUN cd /workspace/third_parties && \
+#     git init MinkowskiEngine \
+#     && cd MinkowskiEngine \
+#     && git remote add origin https://github.com/CiSong10/MinkowskiEngine.git \
+#     && git fetch --depth=1 origin 829bf19859c650776f9466dd2b14b44a91eb1fa9 \
+#     && git checkout FETCH_HEAD \
+#     && sed -i '/sources=.*BIND_FILES.*/a\        define_macros=[('"'"'NVTX_DISABLE'"'"', None)],' setup.py \
+#     && sed -i 's/\bauto __raw = __to_address(__r.get());/auto __raw = std::__to_address(__r.get());/' /usr/include/c++/11/bits/shared_ptr_base.h \
+#     && sed -i '/sources=.BIND_FILES./a\ define_macros=[('"'"'NVTX_DISABLE'"'"', None)],' setup.py \
+#     && sed -i '315d' setup.py \
+#     && sed -i 's/run_command("pip", "uninstall", "MinkowskiEngine", "-y")/print("skip uninstall")/' setup.py \
+#     && /bootstrap/.venv/bin/python setup.py install --force_cuda --blas=openblas
 
 # 4DMOS is optional and only needed when scenegraph.filter_dynamic=true.
 # It is disabled by default because the LiDAR memory construction pipeline can

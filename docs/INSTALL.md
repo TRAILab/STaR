@@ -2,22 +2,7 @@
 ## Prepare Docker Container
 1. Follow the instructions [here](https://docs.docker.com/get-started/) to install docker on your device.
 2. Follow the instructions [here](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) to install the NVIDIA container toolkit.
-NVIDIA container toolkit.
-3. Build and start the development container in two steps:
-
-   ```bash
-   cd STaR/docker
-   docker build -t base-uv-dev:latest -f Dockerfile.cuda128_humble_uv .
-   ```
-
-   The initial build installs ROS, CUDA-enabled PyTorch, and core Python dependencies. It can take about one hour, depending on your internet
-   connection and system performance.
-
-   After the base image is built, start the development container with the project source code mounted:
-
-   ```bash
-   ./run_star.sh
-   ```
+3. The project source code and third-party models need to be mounted into the container. You can navigate to the docker folder, then run `./run_star.sh` to start a container with code mounted.
 ## Mount your files to the container
 You can navigate to `docker-compose.yml` to modify the files that you want to mount to the container.
 ## Prepare Third Party Models

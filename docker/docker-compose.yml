@@ -37,9 +37,9 @@ services:
     volumes:
       # ---- Project Source Code ----
       - ..:/workspace/star
-      # ---- Dataset ----
-      - /media/ssd/Local_data/:/workspace/Local_data
-      # ----Model Checkpoints (Critical for Large Models) ----
+      # ---- Dataset ---- (update with your dataset path)
+      - /home/trailbot/star_project/:/workspace/Local_data
+      # ----Model Checkpoints (update with your model checkpoints path)---
       - /media/ssd/weights/:/workspace/star/weights
       - ../data/:/workspace/data
       - ../data/coda/:/workspace/coda
@@ -47,7 +47,7 @@ services:
       - ../results:/workspace/results
       # ---- Pre-downloaded Model Weights (Static Files) ----
       # - ./third_parties:/workspace/third_parties
-      # ---- Shared HuggingFace & Torch Cache (Critical) ----
+      # ---- Shared HuggingFace & Torch Cache (Optional) ----
       - $HOME/.cache/huggingface:/cache/huggingface
       - $HOME/.cache/torch:/cache/torch
       # ---- X11 Forwarding ----
