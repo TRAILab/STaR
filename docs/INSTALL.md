@@ -133,6 +133,7 @@ After you collect the data with the code run in container, you should be about t
 
 4. **Compatibility**
 
-   This Docker image has been tested with:
-   - CUDA 12.8
-   - Docker Compose v2
+   This Docker image has been tested on x86 systems with NVIDIA RTX 4090 and
+   RTX 5090 GPUs running ROS 2 Humble, CUDA 12.8, and Docker Compose v2.
+
+   A ROS 2 Jazzy branch for NVIDIA DGX Spark (ARM) will be released later.
