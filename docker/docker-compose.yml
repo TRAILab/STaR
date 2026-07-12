@@ -37,10 +37,11 @@ services:
     volumes:
       # ---- Project Source Code ----
       - ..:/workspace/star
-      # ---- Dataset ---- (update with your dataset path)
-      - /home/trailbot/star_project/:/workspace/Local_data
-      # ----Model Checkpoints (update with your model checkpoints path)---
-      #- /media/ssd/weights/:/workspace/star/weights
+      # ---- Dataset / local project data (relative to this compose file) ----
+      - ../..:/workspace/Local_data
+      # ---- Model checkpoints (relative to this compose file) ----
+      # download_weights.sh stores them in ../scripts/weights by default.
+      - ../scripts/weights:/workspace/star/weights:ro
       - ../data/:/workspace/data
       #- ../data/coda/:/workspace/coda
       # ---- Output / Results ----
