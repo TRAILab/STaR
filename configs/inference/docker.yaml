@@ -1,0 +1,22 @@
+
+# sequence: "103"
+postfix: ${..postfix}
+sequence: ${..sequence}
+base_path: "/workspace/results/${sequence}"
+
+instruction_path: "/workspace/results/${sequence}/instructions/instruction.json"
+latest_idx_path: "/workspace/results/${sequence}/latest_frame/${postfix}/latest_frame.txt"
+rgb_folder: "/workspace/results/${sequence}/capture/${postfix}"
+label_folder: "/workspace/results/${sequence}/labels"
+
+retrieve_folder: "/workspace/results/${sequence}/search_DB/${postfix}"
+retrieve_annotated_folder: "/workspace/results/${sequence}/images/${postfix}"
+cot_log_folder: "/workspace/results/${sequence}/cot_log/${postfix}"
+visualize_ib_clusters: true
+
+semantic_folder: "/workspace/results/${sequence}/seg_map/${postfix}"
+occupancy_folder: "/workspace/results/${sequence}/occ_map/${postfix}"
+cost_folder: "/workspace/results/${sequence}/cost_map/${postfix}"
+
+fallback_image_path: "/workspace/star/docs/fallback_image.png"
+update_flag_path: "/workspace/results/${sequence}/update/update.txt"

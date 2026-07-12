@@ -1,0 +1,8 @@
+defaults:
+  - inference: docker
+  - scenegraph: collection_docker_coda  # collection_docker_coda husky collection_docker_sim
+  - dataset: "CODa_docker" # CODa_docker
+
+sequence: 0 # data seqence number, e.g., 0, 3, 6 ... or for simulation: warehouse_03
+postfix: "star" # Isaacsim, star
+enable_online_captioning: true #whether to enable online captioning
