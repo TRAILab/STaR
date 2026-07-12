@@ -60,7 +60,7 @@ the host-side (left-hand) paths under `volumes:` in
 
 ```bash
 cd docker
-docker compose up -d --force-recreate
+./run_star.sh --reset
 ```
 
 ## Prepare Third Party Models
