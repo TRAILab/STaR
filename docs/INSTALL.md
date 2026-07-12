@@ -77,11 +77,13 @@ If you want to rebuild the image, you can run
 Before running the [STaR Agentic RAG](UserQuery.md) evaluation, you need to first build the robot's multimodal memory. Please follow the instructions in [Memory Construction](BuildMemory.md).
 
 After you collect the data with the code run in container, you should be about to see a folder called `result`.
-## Notes
+## Before Running: ROS Configuration and Troubleshooting
 
 1. **ROS 2 topics are not visible inside the container**
 
-   Make sure the host and the container are using the same `ROS_DOMAIN_ID`.
+   Make sure the host and the container use the same `ROS_DOMAIN_ID`. The
+   Compose file passes the host value into the container and defaults to `0`
+   when it is unset.
 
    Check the domain ID:
    ```bash
@@ -92,9 +94,16 @@ After you collect the data with the code run in container, you should be about t
    echo $ROS_DOMAIN_ID
    ```
 
-   If necessary, set the same value in both environments (replace `90` with your desired domain ID):
+   If necessary, set it on the host before starting the container (replace
+   `90` with your desired domain ID):
    ```bash
    export ROS_DOMAIN_ID=90
+   ```
+
+   Recreate the container after changing this value:
+   ```bash
+   cd docker
+   docker compose up -d --force-recreate
    ```
 
 2. **ROS 2 topics are visible, but no data is received**

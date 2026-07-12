@@ -1,6 +1,6 @@
 # Load data related config
 basedir: /workspace/Local_data/CODa # Modify this to your local path
-sequence: !!str 0 # dataset sequence number, e.g., 0, 3, 6 ...
+sequence: !!str 3 # dataset sequence number, e.g., 0, 3, 6 ...
 stride: 10  # For every N images (every second for 10HZ data)
 start: 0 # start frame index in 10HZ data, e.g., 3600 for 6th minute 
 end: -1  # end frame index, -1 means the end of the sequence

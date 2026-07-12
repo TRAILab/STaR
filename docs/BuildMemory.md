@@ -46,6 +46,11 @@ defaults:
 enable_online_captioning: true
 ```
 
+> **Dataset configuration:** Set `sequence` in both `configs/config.yaml` and
+> `configs/dataset/CODa_docker.yaml` to the same CODa sequence number. Also
+> verify `basedir` in `CODa_docker.yaml` points to the directory where you
+> saved the CODa dataset; update it if your dataset is stored elsewhere.
+
 The parameters for multimodal memory construction are specified in the following configuration file:
 
 ```bash
