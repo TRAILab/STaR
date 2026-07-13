@@ -183,9 +183,6 @@ Before testing a sequence, review its annotated keyframes to become familiar wit
 With Gradio running in Terminal 1 and `eval_AIB.py --question_source gradio` running in Terminal 2, submit questions through the web interface. For example:
 
 - “Where can I park my bike?”
-- “Is there a bicycle near the green dumpster?”
-- “What is near the building entrance?”
-- “Where was the robot when it saw a person?”
 
 After each response, inspect the retrieved keyframes and reasoning log below to check whether the agent selected relevant visual evidence.
 
