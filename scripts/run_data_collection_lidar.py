@@ -32,7 +32,7 @@ import rclpy
 import message_filters
 from sensor_msgs.msg import Image, PointCloud2
 import sensor_msgs_py.point_cloud2 as pc2
-from omegaconf import DictConfig
+from omegaconf import DictConfig, open_dict
 from geometry_msgs.msg import TransformStamped
 from cv_bridge import CvBridge
 
@@ -413,6 +413,11 @@ def run_online_captioning(observation_buffer, captioner, args, loop_event, obser
 @hydra.main(version_base=None, config_path="../configs", config_name="config")
 def main(cfg : DictConfig):
     sg_cfg = cfg['scenegraph']
+    # The scene-graph worker receives only this config subtree. Preserve the
+    # active dataset location and sequence for calibration_source: dataset.
+    with open_dict(sg_cfg):
+        sg_cfg.dataset_calibration_root = cfg.dataset.basedir
+        sg_cfg.dataset_calibration_sequence = cfg.dataset.sequence
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--seq_id", type=str, default='05')

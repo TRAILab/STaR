@@ -1,6 +1,8 @@
 from typing import Any
+from pathlib import Path
 
 import numpy as np
+import yaml
 
 from star.utils.data_collection_helpers import read_space_separated_matrix
 
@@ -11,6 +13,37 @@ BASE_FRAME = "base_link"
 
 def load_base_link_to_lidar_matrix(cfg) -> np.ndarray:
     """Load the transform from robot base_link frame to LiDAR frame."""
+    calibration_source = str(getattr(cfg, "calibration_source", "yaml")).lower()
+    if calibration_source == "dataset":
+        dataset_root = getattr(cfg, "dataset_calibration_root", None)
+        dataset_sequence = getattr(cfg, "dataset_calibration_sequence", None)
+        if dataset_root is None or dataset_sequence is None:
+            raise ValueError(
+                "Dataset calibration requires dataset_calibration_root and "
+                "dataset_calibration_sequence. Run through run_data_collection_lidar.py."
+            )
+        calibration_path = (
+            Path(str(dataset_root))
+            / "calibrations"
+            / str(dataset_sequence)
+            / "calib_os1_to_base.yaml"
+        )
+        if not calibration_path.is_file():
+            raise FileNotFoundError(f"Missing dataset LiDAR/base calibration: {calibration_path}")
+        with calibration_path.open() as calibration_file:
+            calibration_data = yaml.safe_load(calibration_file)
+        matrix_data = calibration_data["extrinsic_matrix"]
+        lidar_to_base = np.asarray(matrix_data["data"], dtype=np.float64).reshape(
+            matrix_data["rows"], matrix_data["cols"]
+        )
+        if lidar_to_base.shape != (4, 4):
+            raise ValueError(f"{calibration_path} must contain a 4x4 extrinsic_matrix.")
+        # The existing collection pipeline expects the inverse of CODa's
+        # LiDAR-to-base matrix for its LiDAR pose conversion.
+        return np.linalg.inv(lidar_to_base)
+    if calibration_source != "yaml":
+        raise ValueError("calibration_source must be 'yaml' or 'dataset'.")
+
     matrix = None
     if "base_link_to_lidar_matrix" in cfg and cfg.base_link_to_lidar_matrix is not None:
         matrix = cfg.base_link_to_lidar_matrix

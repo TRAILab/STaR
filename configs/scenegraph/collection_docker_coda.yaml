@@ -6,6 +6,9 @@ start: 0
 end: -1 # 2000
 start_timestamp: 0.0
 calib_path: /workspace/star/configs/calib_coda.txt
+# Select calibration input: "yaml" uses the matrices below; "dataset" loads
+# CODa's calibrations/<sequence>/ files from configs/dataset/CODa_docker.yaml.
+calibration_source: yaml
 
 # Caption generation related
 save_vis: !!bool False                          # Whether to save visualization
@@ -36,7 +39,7 @@ dbscan_eps:  0.25 #0.4                         # Clustering parameter
 dbscan_min_points: 35                        # Clustering parameter
 voxel_size: 0.08                                # Point cloud downsampling value
 bbox_mode: aabb                                 # Object bbox type for merging/visualization: "obb" or "aabb".
-vis_all: !!bool True                           # Whether to visualize before final processing
+vis_all: !!bool False                           # Whether to visualize before final processing
 
 save_SoM: !!bool True                       # save annotated rgb 
 back_projection: !!bool False                # project lidar pointclouds back to Image for debugging
@@ -45,11 +48,11 @@ resolution: 0.1                                   # resolution of the map
 annotated_rgb_path: /workspace/results/${sequence}/annotated_rgb/       # annotated rgb path
 message_path: /workspace/results/${sequence}/message/       # message path
 
-observation_buffer_size: -1 # -1 for all observations, 1 for the latest observation, otherwise set to a positive integer
+observation_buffer_size: 2 # -1 for all observations, 1 for the latest observation, otherwise set to a positive integer
 finish_idle_sec: 30.0                       # Print completion notice after this many idle seconds with empty buffers
 finish_status_interval_sec: 5.0             # Print pending scenegraph/caption buffer sizes at this interval while idle
 print_buffer_status_every_frame: true       # Print scenegraph/video-caption buffer sizes for each emitted observation window
-num_history: 3                                # Number of historical frames to consider for incremental fusion
+num_history: 2                                # Number of historical frames to consider for incremental fusion
 instruction_path: /workspace/results/${sequence}/instructions/
 COT_LOG_PATH: /workspace/results/${sequence}/cot_log/       # COT log path
 
@@ -83,7 +86,7 @@ result_path: /workspace/results/${vis_sequence}/pcd/full_pcd.pkl.gz       # Path
 vis_ft_weight: 0.5                                                            # Feature weight for multimodal retrieval
 vis_caption_weight: 0.5                                                       # Caption weight for multimodal retrieval
 
-# TrailBot sensor calibration
+# Custom YAML calibration (used only when calibration_source: yaml)
 image_width: 1280
 image_height: 720
 camera_projection_matrix:  # 3x4 RGB camera projection matrix P.
@@ -130,7 +133,7 @@ media: null
 lidar_topic: '/lidar/pointcloud'
 rgb_cam_topic: '/camera/image_raw' #'/camera/image_raw'
 
-tf_lookup_mode: latest # latest or timestamp
+tf_lookup_mode: timestamp # latest or timestamp
 tf_lookup_timeout_sec: 0.05
 
 # Extrinsic calibration matrices

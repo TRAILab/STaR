@@ -527,7 +527,7 @@ if __name__ == "__main__":
         prog="vis_3D",
         description="Interactive 3D scene graph visualization",
     )
-    parser.add_argument("--sequence_id", type=str, default="0")
+    parser.add_argument("--sequence_id", type=str, default="3")
     parser.add_argument("--bbox_mode", type=str, choices=["aabb", "obb"], default="aabb")
     parser.add_argument(
         "--sbert_model_path",

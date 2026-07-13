@@ -11,6 +11,7 @@ if parent_dir not in sys.path:
 # #sys.path.append("/home/trailbot/trail_ws/src/TRAILBot/object_nav/third_parties/tokenize-anything")
 
 import numpy as np
+import yaml
 import cv2
 import matplotlib.pyplot as plt
 import torch
@@ -1446,6 +1447,51 @@ def load_calib(calib_source):
         cfg = None
 
     if cfg is not None:
+        calibration_source = str(cfg.get("calibration_source", "yaml")).lower()
+        if calibration_source == "dataset":
+            dataset_root = cfg.get("dataset_calibration_root")
+            dataset_sequence = cfg.get("dataset_calibration_sequence")
+            if dataset_root is None or dataset_sequence is None:
+                raise ValueError(
+                    "Dataset calibration requires dataset_calibration_root and "
+                    "dataset_calibration_sequence. Run through run_data_collection_lidar.py."
+                )
+            calibration_dir = Path(str(dataset_root)) / "calibrations" / str(dataset_sequence)
+            intrinsics_path = calibration_dir / "calib_cam0_intrinsics.yaml"
+            extrinsics_path = calibration_dir / "calib_os1_to_cam0.yaml"
+            if not intrinsics_path.is_file() or not extrinsics_path.is_file():
+                raise FileNotFoundError(
+                    "Missing dataset camera calibration files: "
+                    f"{intrinsics_path}, {extrinsics_path}"
+                )
+
+            def matrix_from_yaml(block):
+                return np.asarray(block["data"], dtype=np.float64).reshape(
+                    block["rows"], block["cols"]
+                )
+
+            with intrinsics_path.open() as intrinsics_file:
+                intrinsics = yaml.safe_load(intrinsics_file)
+            with extrinsics_path.open() as extrinsics_file:
+                extrinsics = yaml.safe_load(extrinsics_file)
+            camera_projection_matrix = matrix_from_yaml(intrinsics["projection_matrix"])
+            lidar_to_camera_matrix = matrix_from_yaml(extrinsics["extrinsic_matrix"])
+            if camera_projection_matrix.shape != (3, 4):
+                raise ValueError(f"{intrinsics_path} must contain a 3x4 projection_matrix.")
+            if lidar_to_camera_matrix.shape != (4, 4):
+                raise ValueError(f"{extrinsics_path} must contain a 4x4 extrinsic_matrix.")
+            calib["camera_projection_matrix"] = camera_projection_matrix
+            calib["lidar_to_camera_matrix"] = lidar_to_camera_matrix
+            calib["P_rect_20"] = camera_projection_matrix
+            calib["T_cam2_velo"] = lidar_to_camera_matrix
+            print(
+                "[calibration] Loaded per-sequence camera calibration from "
+                f"{calibration_dir}."
+            )
+            return calib
+        if calibration_source != "yaml":
+            raise ValueError("calibration_source must be 'yaml' or 'dataset'.")
+
         projection_cfg = cfg.get("camera_projection_matrix", cfg.get("projection_matrix"))
         lidar_to_camera_cfg = cfg.get("lidar_to_camera_matrix", cfg.get("cam2velo_matrix"))
         if projection_cfg is not None and lidar_to_camera_cfg is not None:
