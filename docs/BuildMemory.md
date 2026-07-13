@@ -243,3 +243,5 @@ search building
 ```
 
 Press `q` to quit.
+
+After you finish building and checking the memory, you can move on to the [user query workflow](UserQuery.md).
