@@ -94,15 +94,7 @@ vis_interval: 10
 
 This shows the 3D visualization every 10 processed scene graph frames. Do not use a small `vis_interval` for long memory construction runs.
 
-## 4. Start The ROS Environment
-
-Open a terminal inside the container or workspace and source ROS:
-
-```bash
-source /opt/ros/humble/setup.bash
-```
-
-## 5. Run Memory Construction
+## 4. Run Memory Construction
 
 From the repository root, run:
 
@@ -114,7 +106,7 @@ At startup, the script prints a summary with the active config files, subscribed
 
 Check this printout carefully before playing data.
 
-## 6. Publish CODa Data As ROS Topics
+## 5. Publish CODa Data As ROS Topics
 
 Keep `run_data_collection_lidar.py` running in the first terminal. In a second terminal, enter the same Docker container again:
 
@@ -164,7 +156,7 @@ A lower playback rate helps keep data publishing and memory construction balance
 
 If you are using your own rosbag or live robot sensors instead of CODa, start them in the second terminal and make sure they publish the configured RGB, LiDAR, and TF topics.
 
-## 7. Monitor Progress
+## 6. Monitor Progress
 
 During memory construction, the script prints buffer status:
 
@@ -183,7 +175,7 @@ When both buffers are `0`, all queued observations have been processed.
 
 If enable_online_captioning: true, the script generates video captions online while constructing the 3D primitives.
 
-## 8. Finish Safely
+## 7. Finish Safely
 
 After the rosbag finishes, wait until the script prints:
 
@@ -206,7 +198,7 @@ Saved point cloud map to /workspace/results/<sequence>/pcd/full_pcd.pkl.gz
 
 Do not close the terminal before this file is saved.
 
-## 9. Check The Outputs
+## 8. Check The Outputs
 
 Common outputs are:
 
@@ -222,7 +214,7 @@ After this step, you will have the three main components of the memory:
 - `caption/`: video captions for observation windows.
 The annotated RGB images show object indices. These indices can be used later in the 3D visualization tool.
 
-## 10. Visualize The Memory
+## 9. Visualize The Memory
 
 After memory construction finishes, run:
 
