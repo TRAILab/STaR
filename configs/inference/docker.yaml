@@ -18,5 +18,5 @@ semantic_folder: "/workspace/results/${sequence}/seg_map/${postfix}"
 occupancy_folder: "/workspace/results/${sequence}/occ_map/${postfix}"
 cost_folder: "/workspace/results/${sequence}/cost_map/${postfix}"
 
-fallback_image_path: "/workspace/star/docs/fallback_image.png"
+fallback_image_path: "/workspace/star/misc/fallback_image.png"
 update_flag_path: "/workspace/results/${sequence}/update/update.txt"

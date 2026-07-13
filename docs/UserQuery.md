@@ -14,31 +14,14 @@ Given an open-ended user query, the STaR agent will:
 
 # Prerequisites
 
-## 1. Run STaR in Docker (Recommended)
-
-STaR is configured to use Docker by default.
-
-Please follow the installation guide:
-
-> **[INSTALL.md](INSTALL.md)**
-
----
-
-## 2. Launch Milvus
+## 1. Launch Milvus
 
 Milvus is required for multimodal memory retrieval.
 
-Download the launch script:
+In a host terminal, run this from the STaR project root:
 
 ```bash
-curl -sfL https://raw.githubusercontent.com/milvus-io/milvus/master/scripts/standalone_embed.sh \
--o launch_milvus_container.sh
-```
-
-Start Milvus:
-
-```bash
-bash launch_milvus_container.sh start
+bash scripts/bash/launch_milvus_container.sh start
 ```
 
 > **Note**
@@ -47,7 +30,7 @@ bash launch_milvus_container.sh start
 
 ---
 
-## 3. Install Ollama (Optional)
+## 2. Install Ollama (Optional)
 
 Only required when using local LLMs.
 
@@ -70,7 +53,7 @@ STaR supports two common QA modes:
 
 # Step 1. Start Milvus
 
-From the project root:
+In a host terminal, run this from the STaR project root:
 
 ```bash
 bash scripts/bash/launch_milvus_container.sh start
@@ -95,7 +78,8 @@ postfix: "CoDa"
 
 ### sequence
 
-Dataset / experiment ID.
+Set this to the same sequence used when building the
+memory; otherwise, the query workflow will look for a different memory.
 
 ### postfix
 
