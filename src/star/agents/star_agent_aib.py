@@ -170,6 +170,77 @@ def build_image_paths_from_full_timestamps(
             frame_ids.append(frame_index)
     return image_paths, frame_ids
 
+
+def _resolve_annotated_image_from_captions(
+    target_timestamp: float,
+    caption_image_records: list[dict],
+    frame_dir: str,
+):
+    """Resolve an image from the caption time intervals and saved frame indices.
+
+    Caption metadata is authoritative because recorded frames can be dropped or
+    irregularly spaced; deriving an index from a nominal FPS can therefore drift.
+    """
+    if not caption_image_records:
+        raise ValueError("Caption image metadata is unavailable")
+
+    def interval_distance(record):
+        start = float(record["file_start"])
+        end = float(record["file_end"])
+        return max(start - target_timestamp, 0.0, target_timestamp - end)
+
+    for record in sorted(caption_image_records, key=interval_distance):
+        start = float(record["file_start"])
+        end = float(record["file_end"])
+        existing_indices = []
+        for frame_index in record.get("frame_indices", []):
+            frame_index = int(frame_index)
+            if os.path.exists(f"{frame_dir}{frame_index}.png"):
+                existing_indices.append(frame_index)
+
+        if not existing_indices:
+            continue
+
+        # Select the frame at the matching relative position within this caption.
+        # Values outside the interval naturally select the nearest endpoint.
+        ratio = 0.0 if end <= start else (target_timestamp - start) / (end - start)
+        ratio = min(1.0, max(0.0, ratio))
+        position = int(round(ratio * (len(existing_indices) - 1)))
+        frame_index = existing_indices[position]
+        matched_timestamp = start + ratio * (end - start)
+        return f"{frame_dir}{frame_index}.png", frame_index, matched_timestamp
+
+    raise FileNotFoundError(
+        f"No annotated image referenced by caption metadata exists under "
+        f"{frame_dir} for timestamp {target_timestamp:.3f}"
+    )
+
+
+def build_image_paths_from_caption_timestamps(
+    dt_list: list,
+    caption_image_records: list[dict],
+    frame_dir: str,
+) -> tuple[list[str], list[int]]:
+    """Map timestamp strings to annotated images using caption metadata."""
+    seen = set()
+    image_paths = []
+    frame_ids = []
+
+    for dt_str in dt_list:
+        if dt_str in seen:
+            continue
+        seen.add(dt_str)
+        target_timestamp = datetime.datetime.strptime(
+            dt_str, "%Y-%m-%d %H:%M:%S"
+        ).timestamp()
+        path, frame_index, _ = _resolve_annotated_image_from_captions(
+            target_timestamp, caption_image_records, frame_dir
+        )
+        image_paths.append(path)
+        frame_ids.append(frame_index)
+
+    return image_paths, frame_ids
+
 ### Print out state of the system
 def inspect(state):
     """Print the state passed between Runnables in a langchain and pass it on"""
@@ -294,7 +365,7 @@ class STaRAgent_AIB(Agent):
         print(colored(f"Using LLM: {llm_type} with temperature {temperature} and num_ctx {num_ctx}", "white", attrs=["dark"]))
         return llm
 
-    def set_memory(self, memory: Memory, scene_graph=None, dataset_start_timestamp=None, sbert_model=None, test_num=None, args=None, timestamp_list=None):
+    def set_memory(self, memory: Memory, scene_graph=None, dataset_start_timestamp=None, sbert_model=None, test_num=None, args=None, timestamp_list=None, caption_image_records=None):
         self.memory = memory
         self.sbert_model = sbert_model
         self.start_timestamp = dataset_start_timestamp # in the format of ROS timestamp
@@ -302,6 +373,7 @@ class STaRAgent_AIB(Agent):
         self.args = args
         self.scene_graph = scene_graph
         self.timestamp_list = timestamp_list
+        self.caption_image_records = caption_image_records
 
         # Setup CoT log file
         self.cot_log_file = None # os.path.join(base_dir, "cot_log", f"cot_log_{self.test_num}.txt")
@@ -333,7 +405,7 @@ class STaRAgent_AIB(Agent):
             retriever_func = lambda x: self.hybrid_reranker.retrieve(x)
         else:
             retriever_func = lambda x: memory.search_by_text(x)
-        retriever_func = lambda x: memory.search_by_text_IB_diverse(x)#_isaacsim, _diverse(x)
+        retriever_func = lambda x: memory.search_by_text_IB(x) #search_by_text_IB_isaacsim(x), search_by_text_IB_diverse(x)
         self.retriever_tool = StructuredTool.from_function(
             func=retriever_func,
             name="retrieve_from_text",
@@ -636,14 +708,11 @@ class STaRAgent_AIB(Agent):
             use_existing_images = True
             dt_list = extract_robust_full_timestamps(docs)
             print(f"Extracted timestamps: {dt_list}")
-            # TODO: dt_list -> index -> annotated image_{index}.png
             frame_dir=f"{self.args.results}/{str(self.args.sequence_id)}/annotated_rgb/annotated_rgb_"
-            image_paths, frame_ids = build_image_paths_from_full_timestamps(
+            image_paths, frame_ids = build_image_paths_from_caption_timestamps(
                 dt_list,
-                self.start_timestamp,
-                self.args.annotation_fps,
-                frame_dir=frame_dir,
-                annotation_start_index=self.args.annotation_start_index,
+                self.caption_image_records,
+                frame_dir,
             )
             print(f"Mapped to image paths: {image_paths} with frame IDs: {frame_ids}")
             # image_paths, frame_ids = build_image_paths_from_full_timestamps(dt_list, self.start_timestamp, fps=10, frame_dir=frame_dir)
@@ -795,14 +864,10 @@ class STaRAgent_AIB(Agent):
                         context_paths = []
                         for offset_seconds in (-2.0, 0.0, 3.0, 6.0):
                             try:
-                                context_path, _, _ = _resolve_annotated_image(
+                                context_path, _, _ = _resolve_annotated_image_from_captions(
                                     selected_timestamp + offset_seconds,
-                                    self.start_timestamp,
-                                    self.args.annotation_fps,
+                                    self.caption_image_records,
                                     frame_dir,
-                                    annotation_start_index=(
-                                        self.args.annotation_start_index
-                                    ),
                                 )
                             except (ValueError, FileNotFoundError) as map_error:
                                 print(colored(

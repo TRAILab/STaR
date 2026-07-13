@@ -645,16 +645,35 @@ def load_SG_data(fps=10):
         # print(f"[load_result] Object {i} has {len(obj['image_idx'])} images, with time {obj['time']}")
     objects_all = objects.copy()
     timestamps = np.array(results['timestamps'])
-    return objects, objects_all, timestamps
+    caption_image_records = [
+        {
+            'file_start': item['file_start'],
+            'file_end': item['file_end'],
+            'frame_indices': item.get('frame_indices', []),
+        }
+        for item in out
+    ]
+    return objects, objects_all, timestamps, caption_image_records
 
 def set_run_name(args):
     args.run_name = f"{args.method}+{args.llm}"
     return args
 
 
-def attach_memory_to_agent(args, agent, memory, scene_graph, global_starttime, sbert_model, test_num, timestamp_list=None):
+def attach_memory_to_agent(args, agent, memory, scene_graph, global_starttime, sbert_model, test_num, timestamp_list=None, caption_image_records=None):
     """Attach memory with the method-specific context expected by each agent."""
-    if isinstance(agent, STaRAgent_AIB) or isinstance(agent, STaRAgent_SG):
+    if isinstance(agent, STaRAgent_AIB):
+        agent.set_memory(
+            memory,
+            scene_graph=scene_graph,
+            dataset_start_timestamp=global_starttime,
+            timestamp_list=np.array(timestamp_list) if timestamp_list is not None else None,
+            caption_image_records=caption_image_records,
+            sbert_model=sbert_model,
+            test_num=test_num,
+            args=args,
+        )
+    elif isinstance(agent, STaRAgent_SG):
         agent.set_memory(
             memory,
             scene_graph=scene_graph,
@@ -756,7 +775,7 @@ def main(args):
     os.makedirs(out_path, exist_ok=True)
     # for i in tqdm.tqdm(range(0, len(data)), total=len(data)):
     i = 0
-    objects, objects_all, timestamp_list = load_SG_data(fps=10)
+    objects, objects_all, timestamp_list, caption_image_records = load_SG_data(fps=10)
     #visualize_objects_org(objects)
     
     if args.evaluation_mode:
@@ -778,7 +797,7 @@ def main(args):
                 test_num = i
                 question = wait_for_gradio_command(args.instruction_path)
                 attach_memory_to_agent(
-                    args, agent, memory, scene_graph, global_starttime, sbert_model, test_num, timestamp_list
+                    args, agent, memory, scene_graph, global_starttime, sbert_model, test_num, timestamp_list, caption_image_records
                 )
                 prepare_gradio_logging(args, agent, memory, test_num, question)
                 clear_search_state(agent.memory)
@@ -863,7 +882,7 @@ def main(args):
             # model.update_for_instance(captions=instance_captions, ref_time=start_time)
 
             attach_memory_to_agent(
-                args, agent, memory, scene_graph, global_starttime, sbert_model, test_num, timestamp_list
+                args, agent, memory, scene_graph, global_starttime, sbert_model, test_num, timestamp_list, caption_image_records
             )
             prepare_gradio_logging(args, agent, memory, test_num, question)
             clear_search_state(agent.memory)
@@ -960,9 +979,9 @@ if __name__ == "__main__":
                         description='Runs various LLMs on the QA dataset',)
     
     
-    parser.add_argument("--sequence_id", type=int, default=0)
+    parser.add_argument("--sequence_id", type=int, default=3)
     parser.add_argument("--topk", type=int, default=8) 
-    parser.add_argument("--all_mem", type=str2bool, default=True, help="Whether to use the full memory. Default is True.")
+    parser.add_argument("--all_mem", type=str2bool, default=False, help="Whether to use the full memory. Default is True.")
     parser.add_argument("--evaluation_mode", type=str2bool, default=True, help="Whether to run in evaluation mode. Default is False.")
     parser.add_argument("--manual_evaluation", type=str2bool, default=True, help="Whether to run in manual evaluation mode. Default is True.")
     parser.add_argument("--question_source", type=str, default="dataset", choices=["dataset", "gradio"], help="Use dataset questions or wait for questions submitted by run_gradio_interface.py.")

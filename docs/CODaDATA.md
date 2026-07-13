@@ -67,7 +67,7 @@ CODa/
 ```
 
 
-## 2. Prepare the NaVQA Evaluation Dataset
+## 2. Generate the NaVQA Question List for STaR Evaluation
 
 > **Note**
 >
@@ -92,15 +92,15 @@ This file contains the original NaVQA questions and answers that will be convert
 Run the preprocessing script using the video caption file generated during memory construction:
 
 ```bash
-python scripts/question_scripts/form_question_jsons.py \
-    --caption_file caption_<captioner_name>
+python scripts/question_scripts/form_question_jsons_bbox.py \
+    --caption_file captions_<captioner_name>
 ```
 
 For example:
 
 ```bash
-python scripts/question_scripts/form_question_jsons.py \
-    --caption_file caption_NVILA-Lite-2B
+python scripts/question_scripts/form_question_jsons_bbox.py \
+    --caption_file captions_NVILA-Lite-2B
 ```
 
 This script also computes the **optimal context** for each question based on the selected captioner and caption interval. We recommend generating video captions every **3 seconds**.
