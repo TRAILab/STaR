@@ -51,6 +51,7 @@ from star.utils.lidar_collection_helpers import (
     load_base_link_to_lidar_matrix,
     print_startup_summary,
 )
+from star.utils.pose_file import PoseTimeline
 
 numpy._core = numpy.core
 numpy._core.numeric = numpy.core.numeric
@@ -87,11 +88,28 @@ class ObservationHub(Node):
         self.verbose = bool(getattr(cfg, "verbose", False))
         self.last_tf_warning_time = 0.0
         self.print_buffer_status_every_frame = bool(getattr(cfg, "print_buffer_status_every_frame", True))
+        # Optional TUM trajectory (map <- base_link) used instead of TF, e.g. ground truth
+        # or the output of tools/loop_closure.
+        self.pose_timeline = None
+        self.pose_file_skipped = 0
+        pose_file = getattr(cfg, "pose_file", None)
+        if pose_file:
+            max_gap = getattr(cfg, "pose_file_max_gap_sec", None)
+            self.pose_timeline = PoseTimeline.from_tum(
+                pose_file, max_gap_s=None if max_gap is None else float(max_gap)
+            )
         print("\n[ros] Node ready")
-        print(
-            f"[ros] TF lookup: {MAP_FRAME} <- {BASE_FRAME}, "
-            f"mode={self.tf_lookup_mode}, timeout={self.tf_lookup_timeout_sec:.3f}s"
-        )
+        if self.pose_timeline is not None:
+            times = self.pose_timeline.timestamps_ns
+            print(
+                f"[ros] Poses from {pose_file}: {len(times)} poses, "
+                f"{times[0] / 1e9:.3f}-{times[-1] / 1e9:.3f}s; TF is not used"
+            )
+        else:
+            print(
+                f"[ros] TF lookup: {MAP_FRAME} <- {BASE_FRAME}, "
+                f"mode={self.tf_lookup_mode}, timeout={self.tf_lookup_timeout_sec:.3f}s"
+            )
 
         # create subscribers
         print("[ros] Subscribing")
@@ -128,31 +146,45 @@ class ObservationHub(Node):
         # print("Received synchronized messages!")
         timestamp_cam = camera_msg.header.stamp
 
-        try:
-            if self.tf_lookup_mode == "timestamp":
-                lookup_time = rclpy.time.Time.from_msg(timestamp_cam)
-            else:
-                lookup_time = rclpy.time.Time()
-            tf_msg: TransformStamped = self.tf_buffer.lookup_transform(
-                MAP_FRAME,
-                BASE_FRAME,
-                lookup_time,
-                timeout=Duration(seconds=self.tf_lookup_timeout_sec),
-            )
-        except Exception as e:
-            now = time.monotonic()
-            if now - self.last_tf_warning_time >= self.tf_warning_interval_sec:
-                self.last_tf_warning_time = now
-                frame_idx = self.callback_times
-                message = (
-                    f"[ros][tf-wait] frame={frame_idx} waiting for TF {MAP_FRAME} <- {BASE_FRAME}; "
-                    f"skipping one frame near sensor_time={to_seconds(timestamp_cam):.6f}s "
-                    f"(mode={self.tf_lookup_mode})."
+        if self.pose_timeline is not None:
+            transformation_matrix = self.pose_from_file(timestamp_cam)
+            if transformation_matrix is None:
+                return
+        else:
+            try:
+                if self.tf_lookup_mode == "timestamp":
+                    lookup_time = rclpy.time.Time.from_msg(timestamp_cam)
+                else:
+                    lookup_time = rclpy.time.Time()
+                tf_msg: TransformStamped = self.tf_buffer.lookup_transform(
+                    MAP_FRAME,
+                    BASE_FRAME,
+                    lookup_time,
+                    timeout=Duration(seconds=self.tf_lookup_timeout_sec),
                 )
-                if self.verbose:
-                    message += f" detail={type(e).__name__}: {e}"
-                print(message, flush=True)
-            return
+            except Exception as e:
+                now = time.monotonic()
+                if now - self.last_tf_warning_time >= self.tf_warning_interval_sec:
+                    self.last_tf_warning_time = now
+                    frame_idx = self.callback_times
+                    message = (
+                        f"[ros][tf-wait] frame={frame_idx} waiting for TF {MAP_FRAME} <- {BASE_FRAME}; "
+                        f"skipping one frame near sensor_time={to_seconds(timestamp_cam):.6f}s "
+                        f"(mode={self.tf_lookup_mode})."
+                    )
+                    if self.verbose:
+                        message += f" detail={type(e).__name__}: {e}"
+                    print(message, flush=True)
+                return
+
+            # get the transformation matrix of the lidar
+            translation = tf_msg.transform.translation
+            rotation = tf_msg.transform.rotation
+            quaternion = [rotation.x, rotation.y, rotation.z, rotation.w]
+            rotation_matrix = tf_transformations.quaternion_matrix(quaternion)
+            translation = [translation.x, translation.y, translation.z]
+            translation_matrix = tf_transformations.translation_matrix(translation)
+            transformation_matrix = np.dot(translation_matrix, rotation_matrix)
 
         cv_image = self.bridge.imgmsg_to_cv2(
             camera_msg, desired_encoding='rgb8') # rgb8
@@ -167,15 +199,6 @@ class ObservationHub(Node):
         # Apply the mask to filter out rows with all zero coordinates
         filtered_points = points[mask]
 
-        # get the transformation matrix of the lidar
-        translation = tf_msg.transform.translation
-        rotation = tf_msg.transform.rotation
-        quaternion = [rotation.x, rotation.y, rotation.z, rotation.w]
-        rotation_matrix = tf_transformations.quaternion_matrix(quaternion)
-        translation = [translation.x, translation.y, translation.z]
-        translation_matrix = tf_transformations.translation_matrix(translation)
-        transformation_matrix = np.dot(translation_matrix, rotation_matrix)
-
         # with self.observation_lock:
         self.cv_image = cv_image
         self.timestamp_cam = timestamp_cam
@@ -184,6 +207,23 @@ class ObservationHub(Node):
         self.callback_times += 1
         
         self.observation_ready = True
+
+    def pose_from_file(self, stamp):
+        """Pose of base_link in the map frame at a camera stamp, or None outside the file."""
+        timestamp_ns = int(stamp.sec) * 1_000_000_000 + int(stamp.nanosec)
+        try:
+            return self.pose_timeline.at(timestamp_ns)
+        except ValueError as e:
+            self.pose_file_skipped += 1
+            now = time.monotonic()
+            if now - self.last_tf_warning_time >= self.tf_warning_interval_sec:
+                self.last_tf_warning_time = now
+                print(
+                    f"[ros][pose-file] skipping frame at sensor_time={to_seconds(stamp):.6f}s "
+                    f"({self.pose_file_skipped} skipped so far): {e}",
+                    flush=True,
+                )
+            return None
 
     def run_livedata_processing(self):
         self.get_logger().info("Initialized live data processing...")

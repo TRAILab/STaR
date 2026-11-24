@@ -135,6 +135,11 @@ rgb_cam_topic: '/camera/image_raw' #'/camera/image_raw'
 
 tf_lookup_mode: timestamp # latest or timestamp
 tf_lookup_timeout_sec: 0.05
+# Optional TUM trajectory (timestamp tx ty tz qx qy qz qw: base_link in the map frame)
+# used instead of TF, e.g. dataset ground truth or tools/loop_closure/README.md output.
+# Frames outside the file's time span are skipped; nothing is extrapolated.
+pose_file: null
+pose_file_max_gap_sec: null   # refuse to interpolate across longer gaps; null = no limit
 
 # Extrinsic calibration matrices
 base_to_cam_matrix:

@@ -154,6 +154,8 @@ def print_startup_summary(cfg) -> None:
     startup_kv("RGB camera topic", cfg.rgb_cam_topic)
     startup_kv("LiDAR topic", cfg.lidar_topic)
     startup_kv("TF", f"{MAP_FRAME} <- {BASE_FRAME}")
+    if getattr(cfg, "pose_file", None):
+        startup_kv("poses", f"{cfg.pose_file} (instead of TF)")
     startup_kv(
         "TF lookup",
         f"{getattr(cfg, 'tf_lookup_mode', 'latest')} "

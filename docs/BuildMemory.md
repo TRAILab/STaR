@@ -76,6 +76,24 @@ Use `bbox_mode: obb` for tighter rotated boxes, or `bbox_mode: aabb` for axis-al
 
 Also check `front_axis`. The pipeline filters out point cloud points on the backside before projection and memory construction, so this value must match your LiDAR coordinate convention. For CODa/KITTI-style data, the forward axis is usually `x`. 
 
+### Optional: Poses From A File
+
+By default each frame's pose is the TF transform `map <- base_link` at the camera stamp. To use
+other poses, such as dataset ground truth or a loop-closure-corrected trajectory, point
+`pose_file` at a [TUM](https://cvg.cit.tum.de/data/datasets/rgbd-dataset/file_formats) file:
+
+```yaml
+pose_file: /path/to/trajectory.tum   # timestamp tx ty tz qx qy qz qw: base_link in the map frame
+pose_file_max_gap_sec: null          # optionally refuse to interpolate across longer gaps
+```
+
+Timestamps are in seconds on the same clock as the camera messages. Poses are interpolated at each
+camera stamp (linear position, slerp rotation). Frames outside the file's time span are skipped and
+counted in the log; nothing is extrapolated. TF is not used for poses in this mode.
+
+If your bag has no reliable poses, [`tools/loop_closure`](../tools/loop_closure/README.md) builds
+a gravity-anchored loop-closure trajectory from recorded odometry and LiDAR in this format.
+
 ## 3. Disable Blocking Visualization During Memory Construction
 
 For normal memory construction, keep Open3D visualization effectively disabled by setting the visualization interval to a very large value:
