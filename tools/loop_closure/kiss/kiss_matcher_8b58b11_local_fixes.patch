@@ -1,0 +1,236 @@
+diff --git a/ros/include/slam/pose_graph_manager.h b/ros/include/slam/pose_graph_manager.h
+index 9d828ff..c576b15 100644
+--- a/ros/include/slam/pose_graph_manager.h
++++ b/ros/include/slam/pose_graph_manager.h
+@@ -3,6 +3,7 @@
+ #ifndef KISS_MATCHER_POSE_GRAPH_MANAGER_H
+ #define KISS_MATCHER_POSE_GRAPH_MANAGER_H
+ 
++#include <atomic>
+ #include <chrono>
+ #include <cmath>
+ #include <ctime>
+@@ -101,6 +102,8 @@ class PoseGraphManager : public rclcpp::Node {
+                        const kiss_matcher::PoseGraphNode &latest_node);
+ 
+   void saveFlagCallback(const std_msgs::msg::String::ConstSharedPtr &msg);
++  // local fix 5: full graph snapshot for an online gravity re-solve (inert without a subscriber)
++  void publishGraphSnapshot(const gtsam::Values &estimate, bool final_snapshot);
+ 
+   std::string map_frame_;
+   std::string base_frame_;
+@@ -137,7 +140,7 @@ class PoseGraphManager : public rclcpp::Node {
+   double loop_detection_radius_;  // Only for visualization
+   int sub_key_num_;
+ 
+-  size_t succeeded_query_idx_;
++  size_t succeeded_query_idx_ = 0;  // local fix: was uninitialized
+   std::vector<std::pair<size_t, size_t>> vis_loop_edges_;
+   // pose_graph_tools_msgs::msg::PoseGraph loop_msgs_;
+   std::queue<LoopIdxPair> loop_idx_pair_queue_;
+@@ -173,6 +176,8 @@ class PoseGraphManager : public rclcpp::Node {
+   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr loop_detection_pub_;
+   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr loop_detection_radius_pub_;
+   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr realtime_pose_pub_;
++  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr graph_snapshot_pub_;  // local fix 5
++  std::atomic<uint64_t> graph_snapshot_seq_{0};                             // local fix 5
+   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr debug_src_pub_;
+   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr debug_tgt_pub_;
+   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr debug_coarse_aligned_pub_;
+diff --git a/ros/src/slam/pose_graph_manager.cpp b/ros/src/slam/pose_graph_manager.cpp
+index 483099c..b782aeb 100644
+--- a/ros/src/slam/pose_graph_manager.cpp
++++ b/ros/src/slam/pose_graph_manager.cpp
+@@ -1,5 +1,9 @@
+ #include "slam/pose_graph_manager.h"
+ 
++#include <gtsam/slam/dataset.h>
++
++#include <sstream>
++
+ using namespace kiss_matcher;
+ 
+ PoseGraphManager::PoseGraphManager(const rclcpp::NodeOptions &options)
+@@ -89,6 +93,7 @@ PoseGraphManager::PoseGraphManager(const rclcpp::NodeOptions &options)
+   // this->create_publisher<pose_graph_tools_msgs::msg::PoseGraph>("/hydra_ros_node/external_loop_closures",
+   // 10);
+   realtime_pose_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("pose_stamped", qos);
++  graph_snapshot_pub_ = this->create_publisher<std_msgs::msg::String>("graph_snapshot", qos);  // local fix 5
+   debug_src_pub_     = this->create_publisher<sensor_msgs::msg::PointCloud2>("lc/src", qos);
+   debug_tgt_pub_     = this->create_publisher<sensor_msgs::msg::PointCloud2>("lc/tgt", qos);
+   debug_coarse_aligned_pub_ =
+@@ -240,8 +245,14 @@ void PoseGraphManager::callbackNode(const nav_msgs::msg::Odometry::ConstSharedPt
+       }
+ 
+       local_timer.tic();
++      bool loops_incorporated = false;  // local fix 5
+       {
+         std::lock_guard<std::mutex> lock(graph_mutex_);
++        // local fix 5: a pending non-consecutive BetweenFactor is a loop closure entering the graph now
++        for (const auto &factor : gtsam_graph_) {
++          const auto b = boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3>>(factor);
++          if (b && b->key1() + 1 != b->key2() && b->key2() + 1 != b->key1()) loops_incorporated = true;
++        }
+         isam_handler_->update(gtsam_graph_, init_esti_);
+         isam_handler_->update();
+         if (loop_closure_added_) {
+@@ -268,6 +279,14 @@ void PoseGraphManager::callbackNode(const nav_msgs::msg::Odometry::ConstSharedPt
+         }
+         loop_closure_added_ = false;
+       }
++      if (loops_incorporated) {
++        gtsam::Values esti_copy;
++        {
++          std::lock_guard<std::mutex> lock(realtime_pose_mutex_);
++          esti_copy = corrected_esti_;
++        }
++        publishGraphSnapshot(esti_copy, false);
++      }
+ 
+       const auto t_total = total_timer.toc();
+ 
+@@ -516,6 +535,11 @@ void PoseGraphManager::visualizeLoopClosureClouds() {
+     return;
+   }
+ 
++  // local fix: no LC accepted yet (or stale index) -> nothing valid to visualize
++  if (succeeded_query_idx_ >= keyframes_.size()) {
++    need_lc_cloud_vis_update_ = false;
++    return;
++  }
+   const auto &query_timestamp = toRclcppTime(keyframes_[succeeded_query_idx_].timestamp_);
+ 
+   debug_src_pub_->publish(toROSMsg(loop_closure_->getSourceCloud(), map_frame_, query_timestamp));
+@@ -595,6 +619,41 @@ void PoseGraphManager::saveFlagCallback(const std_msgs::msg::String::ConstShared
+   std::string seq_directory   = save_dir + "/" + seq_name_;
+   std::string scans_directory = seq_directory + "/scans";
+ 
++  // local fix 3: export and republish one final graph estimate
++  {
++    gtsam::Values final_esti;
++    {
++      std::lock_guard<std::mutex> lock(graph_mutex_);
++      isam_handler_->update(gtsam_graph_, init_esti_);
++      isam_handler_->update();
++      gtsam_graph_.resize(0);
++      init_esti_.clear();
++      final_esti = isam_handler_->calculateEstimate();
++    }
++    {
++      std::lock_guard<std::mutex> lock(realtime_pose_mutex_);
++      corrected_esti_ = final_esti;
++    }
++    {
++      std::lock_guard<std::mutex> lock(keyframes_mutex_);
++      for (size_t i = 0; i < keyframes_.size() && i < final_esti.size(); ++i) {
++        keyframes_[i].pose_corrected_ = gtsamToEigen(final_esti.at<gtsam::Pose3>(i));
++      }
++    }
++    {
++      std::lock_guard<std::mutex> lock(vis_mutex_);
++      corrected_path_.poses.clear();
++      for (size_t i = 0; i < final_esti.size(); ++i) {
++        corrected_path_.poses.push_back(
++            gtsamToPoseStamped(final_esti.at<gtsam::Pose3>(i), map_frame_));
++      }
++      corrected_path_pub_->publish(corrected_path_);
++    }
++    RCLCPP_INFO(this->get_logger(), "local fix 3: exporting final estimate of %zu keyframes",
++                final_esti.size());
++    publishGraphSnapshot(final_esti, true);  // local fix 5
++  }
++
+   if (save_in_kitti_format_) {
+     RCLCPP_INFO(this->get_logger(),
+                 "Scans are saved in %s, following the KITTI and TUM format",
+@@ -637,6 +696,30 @@ void PoseGraphManager::saveFlagCallback(const std_msgs::msg::String::ConstShared
+     }
+     kitti_pose_file.close();
+     tum_pose_file.close();
++
++    // local fix 4: dump factor graph + raw keyframe odometry for offline re-optimization
++    {
++      gtsam::NonlinearFactorGraph graph_copy;
++      gtsam::Values esti_copy;
++      {
++        std::lock_guard<std::mutex> lock(graph_mutex_);
++        graph_copy = isam_handler_->getFactorsUnsafe();
++        esti_copy  = isam_handler_->calculateEstimate();
++      }
++      gtsam::writeG2o(graph_copy, esti_copy, seq_directory + "/graph.g2o");
++      std::ofstream raw_file(seq_directory + "/raw_poses_tum.txt");
++      raw_file << "#timestamp x y z qx qy qz qw\n";
++      std::lock_guard<std::mutex> lock(keyframes_mutex_);
++      for (const auto &kf : keyframes_) {
++        const auto ps = eigenToPoseStamped(kf.pose_, map_frame_);
++        raw_file << std::fixed << std::setprecision(9) << kf.timestamp_ << " " << ps.pose.position.x << " "
++                 << ps.pose.position.y << " " << ps.pose.position.z << " " << ps.pose.orientation.x << " "
++                 << ps.pose.orientation.y << " " << ps.pose.orientation.z << " "
++                 << ps.pose.orientation.w << "\n";
++      }
++      RCLCPP_INFO(this->get_logger(), "local fix 4: wrote graph.g2o (%zu factors) and raw_poses_tum.txt",
++                  graph_copy.size());
++    }
+     RCLCPP_INFO(this->get_logger(), "Scans and poses saved in .pcd and KITTI format");
+   }
+   if (save_map_bag_) {
+@@ -676,3 +759,59 @@ int main(int argc, char *argv[]) {
+   rclcpp::shutdown();
+   return 0;
+ }
++
++// local fix 5: publish the whole graph (raw keyframe odometry, iSAM2 estimate, every BetweenFactor<Pose3>)
++// as one text message, so the online re-solve node never has to reassemble increments. Format v1 is parsed
++// by tools/loop_closure/online/online_reopt.py; raw poses use the same conversion as raw_poses_tum.txt.
++void PoseGraphManager::publishGraphSnapshot(const gtsam::Values &estimate, bool final_snapshot) {
++  gtsam::NonlinearFactorGraph factors;
++  {
++    std::lock_guard<std::mutex> lock(graph_mutex_);
++    factors = isam_handler_->getFactorsUnsafe();
++  }
++  const size_t n = estimate.size();
++  std::vector<std::pair<double, geometry_msgs::msg::PoseStamped>> raw;
++  raw.reserve(n);
++  {
++    std::lock_guard<std::mutex> lock(keyframes_mutex_);
++    if (keyframes_.size() < n) {
++      RCLCPP_ERROR(this->get_logger(), "local fix 5: %zu keyframes < %zu estimates; snapshot skipped",
++                   keyframes_.size(), n);
++      return;
++    }
++    for (size_t i = 0; i < n; ++i) {
++      raw.emplace_back(keyframes_[i].timestamp_, eigenToPoseStamped(keyframes_[i].pose_, map_frame_));
++    }
++  }
++  std::ostringstream body;
++  body << std::setprecision(17);
++  size_t n_edges = 0;
++  for (const auto &factor : factors) {
++    const auto between = boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3>>(factor);
++    if (!between || between->key1() >= n || between->key2() >= n) continue;
++    const auto &m = between->measured();
++    const auto q  = m.rotation().toQuaternion();
++    body << "E " << between->key1() << " " << between->key2() << " " << m.x() << " " << m.y() << " "
++         << m.z() << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w() << "\n";
++    ++n_edges;
++  }
++  const uint64_t seq = ++graph_snapshot_seq_;
++  std::ostringstream out;
++  out << "KISS_GRAPH_SNAPSHOT 1 " << seq << " " << (final_snapshot ? 1 : 0) << " " << n
++      << " " << n_edges << "\n";
++  for (size_t i = 0; i < n; ++i) {
++    const auto &p = raw[i].second.pose;
++    const auto e  = estimate.at<gtsam::Pose3>(i);
++    const auto eq = e.rotation().toQuaternion();
++    out << "K " << i << " " << std::fixed << std::setprecision(9) << raw[i].first << std::defaultfloat
++        << std::setprecision(17) << " " << p.position.x << " " << p.position.y << " " << p.position.z << " "
++        << p.orientation.x << " " << p.orientation.y << " " << p.orientation.z << " " << p.orientation.w
++        << " " << e.x() << " " << e.y() << " " << e.z() << " " << eq.x() << " " << eq.y() << " " << eq.z()
++        << " " << eq.w() << "\n";
++  }
++  std_msgs::msg::String msg;
++  msg.data = out.str() + body.str();
++  graph_snapshot_pub_->publish(msg);
++  RCLCPP_INFO(this->get_logger(), "local fix 5: graph snapshot %lu (%zu keyframes, %zu edges%s)",
++              static_cast<unsigned long>(seq), n, n_edges, final_snapshot ? ", final" : "");
++}
